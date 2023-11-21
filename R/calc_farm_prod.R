@@ -37,7 +37,7 @@ summary_croplivestock <- function(crop, lstk, lstk_prod, hhinfo,
   #estimate the value of crop not sold
   #estimate crop price per project
   
-  isold <- crop$income_lcu>0 & crop$sold_kg>0
+  isold <- NAto0(crop$income_lcu)>0 & NAto0(crop$sold_kg)>0
   crop$id_form <- hhinfo$id_form[match(crop$hhid, hhinfo$hhid)]
   crop$name <- as.factor(crop$name)
   cropprice <- tapply(crop$income_lcu[isold]/crop$sold_kg[isold],

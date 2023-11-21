@@ -7,6 +7,8 @@ suppressPackageStartupMessages({
   library(farmhousehold)
 })
 
+if(Sys.getenv('SHINY_PORT') == "") options(shiny.maxRequestSize=10000*1024^2)
+
 scaleChoices <- list("Country"="country",
                      "Project"="project",
                      "Köppen climate"="koeppen")

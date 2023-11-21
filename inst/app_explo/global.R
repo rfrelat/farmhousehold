@@ -7,7 +7,7 @@ suppressPackageStartupMessages({
   require(farmhousehold)
 })
 
-
+if(Sys.getenv('SHINY_PORT') == "") options(shiny.maxRequestSize=10000*1024^2)
 
 logV <- c("crop_yield_kg_per_year_per_ha",
           "lstk_yield_kg_per_year_per_tlu",
