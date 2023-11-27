@@ -102,11 +102,11 @@ lymap_ind <- function(x, var, zoom=NULL, j=0.05){
   if(is.null(zoom)){
     zoom <- findzoom(x$gps_lon, x$gps_lat)
   }
-
   leg <- paste0(
+    paste0(var, ": "), x[,var], "<br>",
     "Country: ", x$country, "<br>",
     "Project: ", x$project, "<br>",
-    "Köppen: ", x$koeppen, "<br>",
+    "Köppen: ", x$koeppen, "\n",
     "FS: ", x$farming_system
   )
 
