@@ -407,6 +407,7 @@ bar_score <- function(x, score="HDDS", pal= NULL, mar4=6,
       return(fig)
     }
   } else {
+    seg <- as.character(seg)
     nf <- table(seg)
     ncat <- rowsum(diet, seg, na.rm = TRUE)
     df <- data.frame(ncat/as.numeric(nf))
@@ -431,9 +432,9 @@ bar_score <- function(x, score="HDDS", pal= NULL, mar4=6,
                    marker = list(color = pal[i],
                                  line = list(color = 'black',
                                              width = 1)),
-                   name = names(df)[i],
+                   name = colnames(df)[i],
                    hoverinfo = 'text',
-                   hovertext = paste(names(df)[i], ":", round(df[,i]*100), "%"))
+                   hovertext = paste(colnames(df)[i], ":", round(df[,i]*100), "%"))
       }
       fig <- fig %>% add_trace(x=row.names(df),y = 0, name = ' ',
                                marker = list(color = 'white'),
