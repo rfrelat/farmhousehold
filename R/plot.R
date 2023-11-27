@@ -29,11 +29,18 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
   }
   if(any(!tab$hhid%in%idlist)){
     warning("Missing id in idlist, that were removed from tab")
-    tab <- tab[tab$hhid%in%idlist]
+    tab <- tab[tab$hhid%in%idlist,]
   }
 
   if(!is.null(seg) & length(seg)!= length(idlist)){
     stop("Segmentation list has different length than the idlist")
+  }
+
+  if(!is.null(seg) & any(is.na(seg))){
+    warning("NA in segmentation list, that were removed from tab")
+    idlist <- idlist[!is.na(seg)]
+    seg <- seg[!is.na(seg)]
+    tab <- tab[tab$hhid%in%idlist,]
   }
 
   # create table
@@ -88,16 +95,27 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
 
     dfp <- df/as.numeric(table(seg))*100
     # set threshold to keep livestock
-    keeplstk <- colSums(dfp>th)>1
-    df <- df[,keeplstk]
-    df <- df[,order(colSums(df), decreasing = TRUE)]
-    dfp <- data.frame(df/as.numeric(table(seg)))
+    if (nrow(dfp)==1){
+      keeplstk <- dfp>th
+      df <- df[,keeplstk]
+      df <- df[order(df, decreasing = TRUE)]
+      pal=pals::brewer.set1(length(df))
+      dfp <- data.frame(t(df/as.numeric(table(seg))))
+      row.names(dfp) <- names(nolstk)
+    } else {
+      keeplstk <- colSums(dfp>th)>1
+      df <- df[,keeplstk]
+      df <- df[,order(colSums(df), decreasing = TRUE)]
+      pal=pals::brewer.set1(ncol(df))
+      dfp <- data.frame(df/as.numeric(table(seg)))
+    }
+
     nolstkp <- nolstk/as.numeric(table(seg))
     if (!interplot){
       par(mar=par()$mar+c(marx,0,0,5))
       barx <- barplot(t(dfp),
                       ylim=c(-max(nolstkp), max(rowSums(dfp))),
-                      col=pals::brewer.set1(ncol(dfp)), las=2)
+                      col=pal, las=2)
       barplot( -nolstkp, col="black", add=TRUE, las=2)
       legend(max(barx)+0.9, max(rowSums(dfp))*0.8,
              legend = c(rev(names(dfp)), "None"),
@@ -108,11 +126,16 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
       fig <- plot_ly(dfp,
                      type="bar", name="Production")
       for (i in 1:ncol(dfp)){
+        if (nrow(dfp)==1){
+          legi=paste0(names(dfp)[i], "<br>N=", df[i], "(", round(dfp[i]*100), "%)")
+        } else {
+          legi=paste0(names(dfp)[i], "<br>N=", df[,i], "(", round(dfp[,i]*100), "%)")
+        }
         fig <- fig %>%
           add_bars(x=1:nrow(dfp), y= dfp[,i],
                    name = names(dfp)[i],
                    hoverinfo = 'text',
-                   hovertext = paste0(names(dfp)[i], "<br>N=", df[,i], "(", round(dfp[,i]*100), "%)")
+                   hovertext = legi
           )
       }
       fig <- fig %>% add_trace(x=1:nrow(dfp),y = -nolstkp,
@@ -136,99 +159,6 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
   }
 }
 
-
-# crop production
-bar_crop <- function(tab, idlist=NULL, th=10,
-                    interplot=FALSE, colcat="#1F77B4", top = 10,
-                    marx=4, unit=c("n", "kg", "yield", "ha"), ...){
-
-  unit <- match.arg(unit)
-
-  # check id
-  if (is.null(idlist)){
-    idlist <- unique(tab$hhid)
-  }
-  if(any(duplicated(idlist))){
-    warning("Duplicated id were found and removed from idlist")
-    idlist <- idlist[!duplicated(idlist)]
-  }
-  if(any(!tab$hhid%in%idlist)){
-    warning("Missing id in idlist, that were removed from tab")
-    tab <- tab[tab$hhid%in%idlist,]
-  }
-
-  # create table
-  n <- tapply(tab$hhid, tab$name, lunique)
-  ha <- tapply(tab$land_area_ha, tab$name, sum, na.rm=TRUE)
-  kg <- tapply(tab$harvest_kg, tab$name, sum, na.rm=TRUE)
-  yi <- ifelse(NAto0(tab$land_area_ha)==0, NA,
-                  tab$harvest_kg/tab$land_area_ha)
-  yi[NAto0(yi)==0] <- NA
-  yield <- tapply(yi, tab$name, median, na.rm=TRUE)
-
-  nha <-   rowSums(tapply(tab$land_area_ha, list(tab$name, tab$hhid), sum, na.rm=TRUE)>0, na.rm = TRUE)
-  nkg <-   rowSums(tapply(tab$harvest_kg, list(tab$name, tab$hhid), sum, na.rm=TRUE)>0, na.rm = TRUE)
-  nyield <-   rowSums(tapply(yi, list(tab$name, tab$hhid), sum, na.rm=TRUE)>0, na.rm = TRUE)
-  df <- data.frame("name"=names(n),
-                   "n"=as.numeric(n),
-                   "phh"=as.numeric(n)/length(idlist)*100,
-                   "kg"=as.numeric(kg),
-                   "pkg"=as.numeric(nkg)/length(idlist)*100,
-                   "ha"=as.numeric(ha),
-                   "pha"=as.numeric(nha)/length(idlist)*100,
-                   "yield"=as.numeric(yield),
-                   "pyi"=as.numeric(nyield)/length(idlist)*100,
-                   "col"=colcat)
-  no <- sum(!idlist%in%tab$hhid)
-  none <- data.frame("name"="none",
-                     "n"=as.numeric(no),
-                     "phh"=as.numeric(no)/length(idlist)*100,
-                     "kg"=NA,
-                     "pkg"=NA,
-                     "ha"=NA,
-                     "pha"=NA,
-                     "yield"=NA,
-                     "pyi"=NA,
-                     "col"="black")
-  df <- rbind(df, none)
-
-  # keep only the one above the threshold
-  top <- ifelse(top>nrow(df), nrow(df), top)
-  df <- df[order(df[,unit], decreasing = TRUE)[1:top],]
-
-  if (!interplot){
-    par(mar=par()$mar+c(0,marx,0,0))
-    barplot(df[,unit], horiz=TRUE, xlab=unit,
-            names=df$name, las=1, col=df$col)
-    par(mar=par()$mar-c(0,marx,0,0))
-    invisible(df)
-  } else {
-    df$unit <- df[,unit]
-    df$leg <- paste0(df$name, "<br>N=", df$n, " (", round(df$phh), "%hh)",
-                     "<br>kg=", round(df$kg), " (", round(df$pkg), "%hh)",
-                     "<br>ha=", round(df$ha)," (", round(df$pha), "%hh)",
-                     "<br>kg/ha=", round(df$yield), "(", round(df$pyi), "%hh)")
-    fig <- plot_ly(df, y = ~name, x = ~unit,
-                   type="bar",
-                   marker = list(color = ~col),
-                   orientation = 'h',
-                   hoverinfo = 'text',
-                   hovertext = ~leg
-    ) %>% layout(
-      title = "",
-      xaxis = list(title = unit),
-      yaxis = list(title = "",
-                   categoryorder = "total ascending"),
-      hovermode = 'y'
-    )
-    fig <- fig %>%
-      config(modeBarButtons = list(list("toImage")),
-             displaylogo = FALSE)
-    return(fig)
-  }
-
-
-}
 
 
 bar_hist <- function(x, breaks = c(0, 0.5, 1, 2, 5, 10),
@@ -329,6 +259,7 @@ bar_hist <- function(x, breaks = c(0, 0.5, 1, 2, 5, 10),
 }
 
 
+
 bar_box <- function(x, interplot=FALSE, seg=NULL,
                     lab= "Number of months food insecure"){
   if(!is.null(seg) & length(seg)!= length(x)){
@@ -384,25 +315,48 @@ bar_box <- function(x, interplot=FALSE, seg=NULL,
   }
 }
 
-bar_hdds <- function(x, pal= NULL, mar4=6,
-                    interplot=FALSE, seg=NULL){
-  #get the column starting with G#num
-  col <- grep("^(G[0-9][0-9]*_)", names(x), ignore.case = TRUE)
+
+
+bar_score <- function(x, score="HDDS", pal= NULL, mar4=6,
+                      interplot=FALSE, seg=NULL, rm0=FALSE){
+
+  #get the column starting with "score"
+  col <- names(x)[grep(paste0(score, "_"), names(x), ignore.case = TRUE)]
+  #but not the score itself
+  col <- col[-grep("_score$", col, ignore.case = TRUE)]
+
+  if(length(col)== 0){
+    stop("Can not find the columns of the score")
+  }
+
   if(is.null(pal) | length(pal)!= length(col)){
     pal <- pals::cols25(length(col))
-    # pals::brewer.set1(length(col)
-    #rcartocolor::carto_pal(10, "Safe")
   }
 
   if(!is.null(seg) & length(seg)!= nrow(x)){
     stop("Segmentation list has different length than diet information")
   }
 
-  hdds <- rowSums(x[,col], na.rm = TRUE)
-  #remove households without hdds information
-  diet <- x[hdds>0,col]
+  if(!is.null(seg) & any(is.na(seg))){
+    warning("NA in segmentation list, that were removed from tab")
+    x <- x[!is.na(seg),]
+    seg <- seg[!is.na(seg)]
+  }
+
+  sumscore <- rowSums(x[,col], na.rm = TRUE)
+  sumna <- rowSums(is.na(x[,col]), na.rm = TRUE)
+  #remove households with score of 0
+  if (rm0){
+    diet <- x[sumscore>0,col]
+    if(!is.null(seg)){ seg <- seg[sumscore>0]}
+  } else {
+    diet <- x[sumna<length(col),col]
+    if(!is.null(seg)){ seg <- seg[sumna<length(col)]}
+  }
+
   #replace NA per 0
   diet[is.na(diet)] <- 0
+  colnames(diet) <- gsub(paste0("^",score, "_"), "", colnames(diet))
 
   if(is.null(seg)){
     sumhdds <- rowSums(diet)
@@ -417,7 +371,7 @@ bar_hdds <- function(x, pal= NULL, mar4=6,
       par(mar=par()$mar+c(0,0,0,mar4))
       barx <- barplot(t(df[,1:length(col)]),
                       width = df$width, col=pal,
-                      xlab="HDDS")
+                      xlab=score)
       legend(max(barx)*1.03, 0.8*max(sumhdds),
              legend = gsub("_", " ", rev(names(df)[1:length(col)])),
              fill = rev(pal), xpd=NA, cex=0.8)
@@ -440,20 +394,19 @@ bar_hdds <- function(x, pal= NULL, mar4=6,
       fig <- fig %>% add_trace(x=~xtick,y = 0, name = ' ',
                                marker = list(color = 'white'),
                                hoverinfo = 'text',
-                               hovertext = paste("HDDS",row.names(df),":", as.numeric(nf), "hh, (", round(as.numeric(nf)/sum(nf)*100), "%)"))
+                               hovertext = paste(score,row.names(df),":", as.numeric(nf), "hh, (", round(as.numeric(nf)/sum(nf)*100), "%)"))
       fig <- fig %>% layout(barmode = 'stack',
                             hovermode = 'x unified',
                             xaxis= list(showline = TRUE,
                                         linecolor = '#000',
                                         tickvals=df$xtick,
                                         ticktext=row.names(df),
-                                        title = "HDDS"))
+                                        title = score))
       fig <- fig %>% config(modeBarButtons = list(list("toImage")),
                             displaylogo = FALSE)
       return(fig)
     }
   } else {
-    seg <- seg[hdds>0]
     nf <- table(seg)
     ncat <- rowsum(diet, seg, na.rm = TRUE)
     df <- data.frame(ncat/as.numeric(nf))
@@ -463,7 +416,7 @@ bar_hdds <- function(x, pal= NULL, mar4=6,
       par(mar=par()$mar+c(0,0,0,mar4))
       barx <- barplot(t(df[,1:length(col)]),
                       col=pal,
-                      ylab="HDDS")
+                      ylab=score)
       legend(max(barx)*1.03, 0.8*max(meanhd),
              legend = gsub("_", " ", rev(names(df)[1:length(col)])),
              fill = rev(pal), xpd=NA, cex=0.8)
@@ -471,7 +424,7 @@ bar_hdds <- function(x, pal= NULL, mar4=6,
       invisible(df)
     } else {
       fig <- plot_ly(df,
-                     type="bar", name="HDDS")
+                     type="bar", name=score)
       for (i in 1:length(col)){
         fig <- fig %>%
           add_bars(x=row.names(df),y= df[,i],
@@ -485,7 +438,7 @@ bar_hdds <- function(x, pal= NULL, mar4=6,
       fig <- fig %>% add_trace(x=row.names(df),y = 0, name = ' ',
                                marker = list(color = 'white'),
                                hoverinfo = 'text',
-                               hovertext = paste("HDDS",row.names(df),":", as.numeric(nf), "hh, (", round(as.numeric(nf)/sum(nf)*100), "%)"))
+                               hovertext = paste(score,row.names(df),":", as.numeric(nf), "hh, (", round(as.numeric(nf)/sum(nf)*100), "%)"))
       fig <- fig %>% layout(barmode = 'stack',
                             hovermode = 'x unified',
                             xaxis= list(title = "Segmentation"))
@@ -497,98 +450,54 @@ bar_hdds <- function(x, pal= NULL, mar4=6,
 }
 
 
-bar_factor <- function(x, xlab = NULL, pal=NULL, mar4=6,
-                     interplot=FALSE, seg=NULL){
-  if(!is.null(seg) & length(seg)!= length(x)){
-    stop("Segmentation list has different length than the variable")
+
+bar_months <- function(x, interplot=FALSE,
+                    lab= "Month with food insecurity"){
+  if(!"foodshortage_months"%in% names(x)){
+    stop("Can not find the column foodshortage_months")
   }
 
-  x <- as.factor(x)
-  if(is.null(pal) | length(pal)!= nlevels(x)){
-    pal <- rev(pals::brewer.rdylgn(nlevels(x)+1))[-2]
-  }
+  months <- unlist(strsplit(x$foodshortage_months, " "))
+  months <- factor(tolower(months), levels = tolower(month.abb))
 
-  if(is.null(seg)){
-    df <- data.frame(table(x))
-    df$perc <- df$Freq /sum(df$Freq)*100
-    df$col <- pal
-    if (!interplot){
-      #par(mar=par()$mar+c(0,marx,0,0))
-      barplot(df$perc, ylab="% households", xlab=xlab,
-              names=df$xcat, las=1, col=df$col)
-      #par(mar=par()$mar-c(0,marx,0,0))
-      invisible(df)
-    } else {
-      df$leg <- paste0(df$x, "<br>N=", df$Freq, "(", round(df$perc), "%)")
-      fig <- plot_ly(df, x = ~x, y = ~perc,
-                     type="bar",
-                     marker = list(color = ~col),
-                     orientation = 'v',
-                     hoverinfo = 'text',
-                     hovertext = ~leg
-      ) %>% layout(
-        title = "",
-        yaxis = list(title = "% of households"),
-        xaxis = list(title = xlab),
-        hovermode = 'x'
-      ) %>% config(
-        modeBarButtons = list(list("toImage")),
-        displaylogo = FALSE)
-      return(fig)
-    }
+  df <- data.frame(table(months))
+  df$perc <- df$Freq /nrow(x)*100
+  if (!interplot){
+    barplot(df$perc, las=1, xlab= lab,
+            ylab="% of households",
+            names=df$months, col="#1F77B4")
+    invisible(df)
   } else {
-    df <- table(seg, x)
-    #compute percentage
-    perc <- df/rowSums(df)*100
-    # transform in data.frame
-    perc <- matrix(perc, nrow = nrow(perc), ncol = ncol(perc))
-    perc <- as.data.frame(perc)
-    dimnames(perc) <- dimnames(df)
-
-    if (!interplot){
-      par(mar=par()$mar+c(0,0,0,mar4))
-      barx <- barplot(t(perc), col=pal, las=2, ylab="%")
-      legend(max(barx)+0.9, max(rowSums(perc))*0.8,
-             legend = rev(names(perc)),
-             fill = rev(pal), xpd=NA)
-      par(mar=par()$mar-c(0, 0,0,mar4))
-      invisible(perc)
-    } else {
-      fig <- plot_ly(perc,
-                     type="bar", name="Production")
-      for (i in 1:ncol(perc)){
-        fig <- fig %>%
-          add_bars(x=1:nrow(perc),y= perc[,i],
-                   marker = list(color = pal[i],
-                                 line = list(color = 'black',
-                                             width = 1)),
-                   name = names(perc)[i],
+    df$col <- "#1F77B4"
+    df$leg <- paste0(df$months, "<br>N=", df$Freq, "(", round(df$perc), "%)")
+    fig <- plot_ly(df, x = ~months, y = ~perc,
+                   type="bar",
+                   marker = list(color = ~col),
+                   orientation = 'v',
                    hoverinfo = 'text',
-                   hovertext = paste(names(perc)[i], "ha: ", round(perc[,i]), "%"))
-      }
-      fig <- fig %>% add_trace(x=1:nrow(perc),y = 0, name = ' ',
-                               marker = list(color = 'white'),
-                               hoverinfo = 'text',
-                               hovertext = paste(row.names(perc),":", rowSums(df), "hh, (", round(rowSums(df)/sum(df)*100), "%)"))
-      fig <- fig %>% layout(barmode = 'stack',
-                            hovermode = 'x unified',
-                            yaxis= list(title = "% of households"),
-                            xaxis= list(showline = TRUE,
-                                        linecolor = '#000',
-                                        tickvals=1:nrow(perc),
-                                        ticktext=row.names(perc),
-                                        title = "Segmentation"))
-      fig <- fig %>%
-        config(modeBarButtons = list(list("toImage")),
-               displaylogo = FALSE)
-      return(fig)
-    }
+                   hovertext = ~leg
+    ) %>% layout(
+      title = "",
+      yaxis = list(title = "% of households"),
+      xaxis = list(title = lab),
+      hovermode = 'x'
+    ) %>% config(
+      modeBarButtons = list(list("toImage")),
+      displaylogo = FALSE)
+    return(fig)
   }
 }
 
-bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE){
+
+
+bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE, maxbar=100){
   if(!is.null(seg) & length(seg)!= nrow(x)){
     stop("Segmentation list has different length than the variable")
+  }
+  if(!is.null(seg) & any(is.na(seg))){
+    warning("NA in segmentation list, that were removed from tab")
+    x <- x[!is.na(seg),]
+    seg <- seg[!is.na(seg)]
   }
 
   keep <- NAto0(x$hh_size_members)>0 & NAto0(x$currency_conversion_lcu_to_ppp)>0
@@ -598,11 +507,12 @@ bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE){
     "cs"=NAto0(x$crop_income_lcu)/(x$hh_size_members*365),
     "lc"=NAto0(x$lstk_value_lcu)/(x$hh_size_members*365),
     "ls"=NAto0(x$lstk_income_lcu)/(x$hh_size_members*365),
-    "off"=NAto0(x$off_farm_lcu)/(x$hh_size_mae*365)
+    "off"=NAto0(x$off_farm_lcu)/(x$hh_size_members*365)
   )
   # conversion lcu to usd ppp
-  inccat <- inccat/x$currency_conversion_lcu_to_ppp
   inccat[is.na(inccat)] <- 0
+  inccat <- inccat/as.numeric(x$currency_conversion_lcu_to_ppp)
+
 
   legP <- c("Crop consumed", "Crop sold",
             "Livestock consumed", "Livestock sold",
@@ -615,18 +525,26 @@ bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE){
   pinccat[is.na(pinccat)] <- 0
 
   if(is.null(seg)){
-    leg <- paste0(x$hh_size_members, "persons <br>",
-                  round(x$land_cultivated_ha,1), "ha <br>",
-                  round(x$livestock_tlu,1), "TLU <br>",
-                  round(tot,2), "USD/person/day")
-
     o1 <- order(tot)
-    leg <- leg[o1]
     inccat <- inccat[o1,]
     pinccat <- pinccat[o1,]
+    if (nrow(x)<2*maxbar){
+      leg <- paste0(x$hh_size_members, "persons <br>",
+                    round(x$land_cultivated_ha,1), "ha <br>",
+                    round(x$livestock_tlu,1), "TLU <br>",
+                    round(tot,2), "USD/person/day")
+      leg <- leg[o1]
+    } else {
+      #simplify and group households to lower the number of bars
+      hhgroup <- cut(1:nrow(x), seq(1, nrow(x), length.out=maxbar),
+                     include.lowest = TRUE)
+
+      inccat <- rowsum(inccat,hhgroup)/as.numeric(table(hhgroup))
+      tot <- rowSums(inccat, na.rm = TRUE)
+      pinccat <- inccat/tot
+    }
     #remove the extreme ones
     ry <- c(0, quantile(tot, probs = qmax))
-
     if (!interplot){
       barplot(t(inccat), las=1, xlab= "households",
               ylab="USD/person/day", ylim=ry,
@@ -657,15 +575,11 @@ bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE){
         add_trace(y = ~off, name = 'Off farm',
                   marker = list(color = pal[5]),
                   hoverinfo = 'text',
-                  hovertext = paste(round(pinccat$off*100), "%")) %>%
-        add_trace(y = 0, name = ' ',
-                  marker = list(color = 'white'),
-                  hoverinfo = 'text',
-                  hovertext = leg)
+                  hovertext = paste(round(pinccat$off*100), "%"))
       fig <- fig %>%
         layout(
           title = "",
-          xaxis = list(title = "households"), #categoryorder = "total ascending"
+          xaxis = list(title = "households by income"), #categoryorder = "total ascending"
           yaxis = list(title = "USD/person/day",
                        range = ry),
           barmode = 'stack',
@@ -703,9 +617,10 @@ bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE){
       fig <- fig %>% add_trace(x=1:nrow(df),y = 0, name = ' ',
                                marker = list(color = 'white'),
                                hoverinfo = 'text',
-                               hovertext = paste(row.names(df),":", as.numeric(table(x$segmentation)), "hh"))
+                               hovertext = paste(row.names(df),":", as.numeric(table(seg)), "hh"))
       fig <- fig %>% layout(barmode = 'stack',
                             hovermode = 'x unified',
+                            yaxis= list(title = "%"),
                             xaxis= list(showline = TRUE,
                                         linecolor = '#000',
                                         tickvals=1:nrow(df),

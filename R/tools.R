@@ -43,6 +43,12 @@ scale01 <- function(x, ...) {
   }
 }
 
+uniqueNA <- function(x){  #Remove NAs
+  x <- x[!is.na(x)]
+  x <- x[x!="NA"]
+  return(unique(x))
+}
+
 simplestring <- function(x) return(tolower(gsub("[()]", "", x)))
 
 cleanconv <- function(x) {
@@ -50,7 +56,7 @@ cleanconv <- function(x) {
   y <- tolower(gsub("[( )]", "", x))
   #remove last 's'
   y <- gsub("s$", "", y)
- return(y) 
+ return(y)
 }
 
 cleanname <- function(x){
@@ -71,10 +77,10 @@ conv_fun <- function(conv, x, other=NULL, cat=NULL, lab="otherspecify"){
       warning(paste("Missing conversion categories for", paste(miss, collapse = ", ")))
     }
     x <- cat[as.character(x)]
-  } 
+  }
   if (!is.null(other)){
     x <- ifelse(cleanconv(x)==lab, other, x)
-  } 
+  }
   x <- cleanconv(x)
   #make sure the names are lower string
   names(conv) <- cleanconv(names(conv))
