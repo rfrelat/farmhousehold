@@ -1,23 +1,26 @@
-#' Show the crop or livestock adoption
+#' Barplot of the crop or livestock adoption
 #'
 #' This function make a barplot showing the most commun
 #' crop or livestock in the dataset
-#' @param tab either crop or lvst table with columns `hhid` and `name`
+#' @param tab either crop or lvst table with columns hhid and name
 #' @param idlist full list of households id
-#' @param th threshold to show all items with more than th% (default=10)
-#' @param seg segmentation of households (if any) NEED CHECKS
-#' @param interplot wether interactive plot with plotly or not
+#' @param th threshold to show all items with more than th (default=10)
+#' @param seg segmentation of households (if any)
+#' @param interplot decide if the plot is interactive (with plotly) or not
 #' @param colcat colors of the items
-#' @param maradd extra margin for plotting the crop names (when not interactive plot)
+#' @param marx extra margin for plotting the crop names (when not interactive plot)
 #' @keywords barplot, adoption
 #' @export
 #' @examples
-#' data(rhomis)
-#' bar_div(crop)
+#' data(hhdb_rhomis)
+#' attach(hhdb_rhomis)
+#'
+#' bar_div(crop, idlist=hhinfo$hhid)
+#' bar_div(lstk, idlist=hhinfo$hhid)
 #'
 bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
-                     interplot=FALSE, colcat="#1F77B4",
-                     marx=4, ...){
+                    interplot=FALSE, colcat="#1F77B4",
+                    marx=4){
 
   # check id
   if (is.null(idlist)){
@@ -112,7 +115,7 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
 
     nolstkp <- nolstk/as.numeric(table(seg))
     if (!interplot){
-      par(mar=par()$mar+c(marx,0,0,5))
+      par(mar=par()$mar+c(marx,0,0,marx*1.3))
       barx <- barplot(t(dfp),
                       ylim=c(-max(nolstkp), max(rowSums(dfp))),
                       col=pal, las=2)
@@ -120,7 +123,7 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
       legend(max(barx)+0.9, max(rowSums(dfp))*0.8,
              legend = c(rev(names(dfp)), "None"),
               fill = c(rev(pals::brewer.set1(ncol(dfp))), "black"), xpd=NA)
-      par(mar=par()$mar-c(marx, 0,0,5))
+      par(mar=par()$mar-c(marx,0,0,marx*1.3))
       invisible(dfp)
     } else {
       fig <- plot_ly(dfp,
@@ -161,6 +164,29 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
 
 
 
+#' Distribution of numerical values as histogram
+#'
+#' This function show the distribution of quantities
+#' such as land cultivated, livestock herd size, family size, ...
+#' @param x vector with the variable of interest
+#' @param breaks breaks to build the histogram, by default 6 breaks for positive values
+#' @param lab the name of the classes (should be one length shorter than break)
+#' @param xunit the label of the axis
+#' @param pal colors of the numerical categories  (should be one length shorter than break)
+#' @param interplot decide if the plot is interactive (with plotly) or not
+#' @param seg segmentation of households (if any)
+#' @keywords hist
+#' @export
+#' @examples
+#' data(hhdb_rhomis)
+#' attach(hhdb_rhomis)
+#'
+#' #distribution of land cultivated
+#' bar_hist(hhinfo$land_cultivated_ha)
+#'
+#' #land cultivated per HDDS score
+#' bar_hist(hhinfo$land_cultivated_ha, seg=hhinfo$hdds_score)
+#'
 bar_hist <- function(x, breaks = c(0, 0.5, 1, 2, 5, 10),
                      lab = NULL, xunit="ha",  pal=NULL,
                      interplot=FALSE, seg=NULL){
@@ -259,7 +285,26 @@ bar_hist <- function(x, breaks = c(0, 0.5, 1, 2, 5, 10),
 }
 
 
-
+#' Distribution of count values
+#'
+#' This function show the distribution of count values
+#' such as the HDDS score or the number of months with food insecurity
+#' @param x vector with the variable of interest
+#' @param interplot decide if the plot is interactive (with plotly) or not
+#' @param seg segmentation of households (if any)
+#' @param lab the label on the axis
+#' @keywords boxplot
+#' @export
+#' @examples
+#' data(hhdb_rhomis)
+#' attach(hhdb_rhomis)
+#'
+#' #distribution of number of month with food insecurity
+#' bar_box(hhinfo$foodshortage_count)
+#'
+#' #distribution of HDDS score per large region
+#' bar_box(hhinfo$hdds_score, lab="HDDS", seg=hhinfo$large_region)
+#'
 bar_box <- function(x, interplot=FALSE, seg=NULL,
                     lab= "Number of months food insecure"){
   if(!is.null(seg) & length(seg)!= length(x)){
@@ -315,13 +360,34 @@ bar_box <- function(x, interplot=FALSE, seg=NULL,
   }
 }
 
-
-
-bar_score <- function(x, score="HDDS", pal= NULL, mar4=6,
-                      interplot=FALSE, seg=NULL, rm0=FALSE){
+#' Distribution of scores
+#'
+#' This function show the distribution of scores that are built on multiple categories
+#' such as the HDDS or the FIES
+#' @param tab the dataframe with information on the score
+#' @param score name of the score and prefix of columns of interest
+#' @param pal colors of the categories
+#' @param marx extra margin for plotting the names (when not interactive plot)
+#' @param rm0 remove households with a score of 0 (are they hidden NA?)
+#' @param interplot decide if the plot is interactive (with plotly) or not
+#' @param seg segmentation of households (if any)
+#' @keywords diet diversity
+#' @export
+#' @examples
+#' data(hhdb_rhomis)
+#' attach(hhdb_rhomis)
+#'
+#' #plot HDDS score
+#' bar_score(hhinfo, score="HDDS")
+#'
+#' #plot FIES per large region
+#' bar_score(hhinfo, score="FIES", seg=hhinfo$large_region)
+#'
+bar_score <- function(tab, score="HDDS", pal= NULL, marx=6, rm0=FALSE,
+                      interplot=FALSE, seg=NULL){
 
   #get the column starting with "score"
-  col <- names(x)[grep(paste0(score, "_"), names(x), ignore.case = TRUE)]
+  col <- names(tab)[grep(paste0(score, "_"), names(tab), ignore.case = TRUE)]
   #but not the score itself
   col <- col[-grep("_score$", col, ignore.case = TRUE)]
 
@@ -333,24 +399,24 @@ bar_score <- function(x, score="HDDS", pal= NULL, mar4=6,
     pal <- pals::cols25(length(col))
   }
 
-  if(!is.null(seg) & length(seg)!= nrow(x)){
+  if(!is.null(seg) & length(seg)!= nrow(tab)){
     stop("Segmentation list has different length than diet information")
   }
 
   if(!is.null(seg) & any(is.na(seg))){
     warning("NA in segmentation list, that were removed from tab")
-    x <- x[!is.na(seg),]
+    tab <- tab[!is.na(seg),]
     seg <- seg[!is.na(seg)]
   }
 
-  sumscore <- rowSums(x[,col], na.rm = TRUE)
-  sumna <- rowSums(is.na(x[,col]), na.rm = TRUE)
+  sumscore <- rowSums(tab[,col], na.rm = TRUE)
+  sumna <- rowSums(is.na(tab[,col]), na.rm = TRUE)
   #remove households with score of 0
   if (rm0){
-    diet <- x[sumscore>0,col]
+    diet <- tab[sumscore>0,col]
     if(!is.null(seg)){ seg <- seg[sumscore>0]}
   } else {
-    diet <- x[sumna<length(col),col]
+    diet <- tab[sumna<length(col),col]
     if(!is.null(seg)){ seg <- seg[sumna<length(col)]}
   }
 
@@ -368,14 +434,14 @@ bar_score <- function(x, score="HDDS", pal= NULL, mar4=6,
     df$width <- as.numeric((nf+0.1)/max(nf+0.1))
     df$xtick <-  (cumsum(df$width)-df$width/2) +0.6
     if (!interplot){
-      par(mar=par()$mar+c(0,0,0,mar4))
+      par(mar=par()$mar+c(0,0,0,marx))
       barx <- barplot(t(df[,1:length(col)]),
                       width = df$width, col=pal,
                       xlab=score)
       legend(max(barx)*1.03, 0.8*max(sumhdds),
              legend = gsub("_", " ", rev(names(df)[1:length(col)])),
              fill = rev(pal), xpd=NA, cex=0.8)
-      par(mar=par()$mar-c(0,0,0,mar4))
+      par(mar=par()$mar-c(0,0,0,marx))
       invisible(df)
     } else {
       fig <- plot_ly(df,
@@ -414,14 +480,14 @@ bar_score <- function(x, score="HDDS", pal= NULL, mar4=6,
     meanhd <- apply(ncat/as.numeric(nf),1,sum)
 
     if (!interplot){
-      par(mar=par()$mar+c(0,0,0,mar4))
+      par(mar=par()$mar+c(0,0,0,marx))
       barx <- barplot(t(df[,1:length(col)]),
                       col=pal,
                       ylab=score)
       legend(max(barx)*1.03, 0.8*max(meanhd),
              legend = gsub("_", " ", rev(names(df)[1:length(col)])),
              fill = rev(pal), xpd=NA, cex=0.8)
-      par(mar=par()$mar-c(0,0,0,mar4))
+      par(mar=par()$mar-c(0,0,0,marx))
       invisible(df)
     } else {
       fig <- plot_ly(df,
@@ -451,18 +517,29 @@ bar_score <- function(x, score="HDDS", pal= NULL, mar4=6,
 }
 
 
-
-bar_months <- function(x, interplot=FALSE,
+#' Show the months with food insecurity
+#'
+#' This function show the months with food insecurity
+#' @param x the vector containing the months with food shortage
+#' @param sep the separation between months, by default " "
+#' @param interplot decide if the plot is interactive (with plotly) or not
+#' @param lab the label on the axis
+#' @keywords months food security
+#' @export
+#' @examples
+#' data(hhdb_rhomis)
+#' attach(hhdb_rhomis)
+#'
+#' #plot the month with food shortage score
+#' bar_months(hhinfo$foodshortage_months)
+#'
+bar_months <- function(x, sep=" ", interplot=FALSE,
                     lab= "Month with food insecurity"){
-  if(!"foodshortage_months"%in% names(x)){
-    stop("Can not find the column foodshortage_months")
-  }
-
-  months <- unlist(strsplit(x$foodshortage_months, " "))
+  months <- unlist(strsplit(x, " "))
   months <- factor(tolower(months), levels = tolower(month.abb))
 
   df <- data.frame(table(months))
-  df$perc <- df$Freq /nrow(x)*100
+  df$perc <- df$Freq /length(x)*100
   if (!interplot){
     barplot(df$perc, las=1, xlab= lab,
             ylab="% of households",
@@ -489,30 +566,49 @@ bar_months <- function(x, interplot=FALSE,
   }
 }
 
-
-
-bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE, maxbar=100){
-  if(!is.null(seg) & length(seg)!= nrow(x)){
+#' Show the months with food insecurity
+#'
+#' This function show the months with food insecurity
+#' @param tab the dataframe with information on the income activities, usually hhinfo
+#' @param qmax percentile that is not shown on y axis
+#' @param marx extra margin for plotting the names (when not interactive plot)
+#' @param seg segmentation of households (if any)
+#' @param interplot decide if the plot is interactive (with plotly) or not
+#' @param maxbar number of bars to be plotted. If too high, the barplot is hardly readable.
+#' @keywords sources income
+#' @export
+#' @examples
+#' data(hhdb_rhomis)
+#' attach(hhdb_rhomis)
+#'
+#' #plot the source of income
+#' bar_income(hhinfo)
+#'
+#' #plot the source of income per large region
+#' bar_income(hhinfo, seg=hhinfo$large_region)
+#'
+bar_income <- function(tab, qmax=0.95, marx=6, seg=NULL, interplot=FALSE, maxbar=100){
+  if(!is.null(seg) & length(seg)!= nrow(tab)){
     stop("Segmentation list has different length than the variable")
   }
   if(!is.null(seg) & any(is.na(seg))){
     warning("NA in segmentation list, that were removed from tab")
-    x <- x[!is.na(seg),]
+    tab <- tab[!is.na(seg),]
     seg <- seg[!is.na(seg)]
   }
 
-  keep <- NAto0(x$hh_size_members)>0 & NAto0(x$currency_conversion_lcu_to_ppp)>0
-  x <- subset(x, keep)
+  keep <- NAto0(tab$hh_size_members)>0 & NAto0(tab$currency_conversion_lcu_to_ppp)>0
+  stab <- subset(tab, keep)
   inccat <- data.frame(
-    "cc"=NAto0(x$crop_value_lcu)/(x$hh_size_members*365),
-    "cs"=NAto0(x$crop_income_lcu)/(x$hh_size_members*365),
-    "lc"=NAto0(x$lstk_value_lcu)/(x$hh_size_members*365),
-    "ls"=NAto0(x$lstk_income_lcu)/(x$hh_size_members*365),
-    "off"=NAto0(x$off_farm_lcu)/(x$hh_size_members*365)
+    "cc"=NAto0(stab$crop_value_lcu)/(stab$hh_size_members*365),
+    "cs"=NAto0(stab$crop_income_lcu)/(stab$hh_size_members*365),
+    "lc"=NAto0(stab$lstk_value_lcu)/(stab$hh_size_members*365),
+    "ls"=NAto0(stab$lstk_income_lcu)/(stab$hh_size_members*365),
+    "off"=NAto0(stab$off_farm_lcu)/(stab$hh_size_members*365)
   )
   # conversion lcu to usd ppp
   inccat[is.na(inccat)] <- 0
-  inccat <- inccat/as.numeric(x$currency_conversion_lcu_to_ppp)
+  inccat <- inccat/as.numeric(stab$currency_conversion_lcu_to_ppp)
 
 
   legP <- c("Crop consumed", "Crop sold",
@@ -529,15 +625,15 @@ bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE, maxbar=1
     o1 <- order(tot)
     inccat <- inccat[o1,]
     pinccat <- pinccat[o1,]
-    if (nrow(x)<2*maxbar){
-      leg <- paste0(x$hh_size_members, "persons <br>",
-                    round(x$land_cultivated_ha,1), "ha <br>",
-                    round(x$livestock_tlu,1), "TLU <br>",
+    if (nrow(stab)<2*maxbar){
+      leg <- paste0(stab$hh_size_members, "persons <br>",
+                    round(stab$land_cultivated_ha,1), "ha <br>",
+                    round(stab$livestock_tlu,1), "TLU <br>",
                     round(tot,2), "USD/person/day")
       leg <- leg[o1]
     } else {
       #simplify and group households to lower the number of bars
-      hhgroup <- cut(1:nrow(x), seq(1, nrow(x), length.out=maxbar),
+      hhgroup <- cut(1:nrow(stab), seq(1, nrow(stab), length.out=maxbar),
                      include.lowest = TRUE)
 
       inccat <- rowsum(inccat,hhgroup)/as.numeric(table(hhgroup))
@@ -595,13 +691,13 @@ bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE, maxbar=1
     df <- df/rowSums(df)*100
     names(df) <- legP
     if (!interplot){
-      par(mar=par()$mar+c(0,0,0,mar4))
+      par(mar=par()$mar+c(0,0,0,marx))
       barx <- barplot(t(df),las=1, xlab= "Segmentation",
                       ylab="% value of production",
                       col=pal)
       legend(max(barx)*1.1, 80, xpd=NA,
              legend = rev(legP), fill=rev(pal))
-      par(mar=par()$mar-c(0,0,0,mar4))
+      par(mar=par()$mar-c(0,0,0,marx))
       invisible(df)
     } else {
       fig <- plot_ly(df,
@@ -633,3 +729,95 @@ bar_income <- function(x, qmax=0.95, seg=NULL, mar4=6, interplot=FALSE, maxbar=1
     }
   }
 }
+
+
+#' Select the threshold for numeric variables
+#'
+#' This function show the threshold of a numeric variable
+#' @param x the vector containing the variable of interest
+#' @param lab the label on the axis
+#' @param th the threshold
+#' @param corskew correct the highly skewed variable
+#' @param pal color of the below and above threshold
+#' @keywords density threshold
+#' @export
+#' @examples
+#' data(hhdb_rhomis)
+#' attach(hhdb_rhomis)
+#'
+#' #plot the source of income
+#' plot_density(hhinfo$hh_size_mae, th=5)
+#'
+plot_density <- function(x, th, lab="", corskew=TRUE, pal=c("red", "blue")){
+  #make sure there is no NA or infinite values
+  x <- x[complete.cases(x)&is.finite(x)]
+
+  #check if skewed
+  skewY <- moments::skewness(x, na.rm = TRUE)
+  if(skewY>5 & corskew) {
+    x <- x**(1/4)
+    th <- th**(1/4)
+    lab <- paste(lab, "(root transformed)")
+  }
+
+  d <- density(x, na.rm = TRUE)
+  plot(d, main="", xaxt="n", xlab=lab,
+       xlim=range(x, na.rm=TRUE), xaxs="i")
+  #separate in two
+  d1 <- cbind(d$x[d$x<=th], d$y[d$x<=th])
+  d1 <- rbind(d1, c(d1[nrow(d1),1], 0))
+  d2 <- cbind(d$x[d$x>th], d$y[d$x>th])
+  d2 <- rbind(d2, c(d2[1,1], 0))
+  polygon(d1,
+          col=pal[1], border=pal[1])
+  polygon(d2,
+          col=pal[2], border=pal[2])
+
+  if(skewY>5 & corskew) {
+    xax <- axis(1, labels=FALSE)
+    axis(1, at = xax, labels = round(xax**(4)))
+  } else {
+    axis(1)
+  }
+}
+
+#' Show the pie chart of the number of households per group
+#'
+#' This function show the threshold of a numeric variable
+#' @param x the vector containing the groups
+#' @param interplot decide if the plot is interactive (with plotly) or not
+#' @keywords pie
+#' @export
+#' @examples
+#' data(hhdb_rhomis)
+#' attach(hhdb_rhomis)
+#'
+#' #plot the source of income
+#' pie_seg(hhinfo$large_region)
+#'
+#'
+pie_seg <- function(x, interplot=FALSE){
+  df <- data.frame(table(x, useNA="ifany"))
+  df$x <- as.character(df$x)
+  df$x[is.na(df$x)] <- "NA"
+  df$Perc <- df$Freq/sum(df$Freq)
+  df$text <- paste(df$x, "<br>n=", df$Freq, "<br>", round(df$Perc*100,1), "%")
+
+  if(!interplot){
+    pie(df$Freq, labels = df$x)
+    invisible(df)
+  } else {
+    p1 <- plot_ly(df, labels = ~x, values = ~Freq,
+                  type = 'pie',
+                  textposition = 'inside',
+                  textinfo = 'label+percent',
+                  direction ='clockwise', sort=FALSE,
+                  hoverinfo = 'text',
+                  text = ~text) %>%
+      layout(title = 'Segmentation') %>%
+      config(modeBarButtons = list(list("toImage")),
+             displaylogo = FALSE)
+    return(p1)
+  }
+}
+

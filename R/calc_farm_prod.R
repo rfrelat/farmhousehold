@@ -1,3 +1,15 @@
+#' Calculate farm household characteristics
+#'
+#' This function summarize farm household activites
+#' based on information about crop, livestock and household
+#' @param crop crop information
+#' @param lstk livestock information
+#' @param lstk_prod livestock production
+#' @param hhinfo information on households
+#' @param conv_tlu conversion from livestock categories to tlu
+#' @param conv_energy energy conversion of product from kg to kcal
+#' @keywords summary
+#' @export
 calc_farm_prod <- function(crop, lstk, lstk_prod, hhinfo,
                                   conv_tlu, conv_energy){
   if (any(!crop$name%in%names(conv_energy))) {

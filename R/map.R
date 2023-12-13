@@ -1,3 +1,5 @@
+.pkgenv <- new.env(parent=emptyenv())
+
 tmap_hh <- function(x, interplot=FALSE, j=0.05){
 
   # remove NA
@@ -21,8 +23,8 @@ tmap_hh <- function(x, interplot=FALSE, j=0.05){
       tmap_mode("view")
       fig <- tm_basemap("OpenStreetMap.Mapnik")
     } else {
-      data("World")
-      fig <- tm_shape(World, bbox = x_bb)+
+      data("World", package = "tmap", envir = .pkgenv)
+      fig <- tm_shape(.pkgenv$World, bbox = x_bb)+
         tm_polygons()
     }
     fig <- fig +  tm_shape(sfx)+
@@ -50,8 +52,8 @@ tmap_sub <- function(x0,x, col="red", interplot=FALSE){
       tmap_mode("view")
       fig <- tm_basemap("OpenStreetMap.Mapnik")
     } else {
-      data("World")
-      fig <- tm_shape(World, bbox = x_bb)+
+      data("World", package = "tmap", envir = .pkgenv)
+      fig <- tm_shape(.pkgenv$World, bbox = x_bb)+
         tm_polygons()
     }
     fig <- fig +  tm_shape(sfx)+
@@ -84,8 +86,8 @@ tmap_ind <- function(x, var, interplot=FALSE, j=0.05){
       tmap_mode("view")
       fig <- tm_basemap("OpenStreetMap.Mapnik")
     } else {
-      data("World")
-      fig <- tm_shape(World, bbox = x_bb)+
+      data("World", package = "tmap", envir = .pkgenv)
+      fig <- tm_shape(.pkgenv$World, bbox = x_bb)+
         tm_polygons()
     }
     fig <- fig +  tm_shape(sfx)+
@@ -106,7 +108,7 @@ lymap_ind <- function(x, var, zoom=NULL, j=0.05){
     paste0(var, ": "), x[,var], "<br>",
     "Country: ", x$country, "<br>",
     "Project: ", x$project, "<br>",
-    "Köppen: ", x$koeppen, "\n",
+    "Koppen: ", x$koeppen, "\n",
     "FS: ", x$farming_system
   )
 
@@ -175,8 +177,8 @@ tmap_diff <- function(x1, x2, sel=NULL, interplot=TRUE, j=0.05){
       tmap_mode("view")
       fig <- tm_basemap("OpenStreetMap.Mapnik")
     } else {
-      data("World")
-      fig <- tm_shape(World, bbox = x_bb)+
+      data("World", package = "tmap", envir = .pkgenv)
+      fig <- tm_shape(.pkgenv$World, bbox = x_bb)+
         tm_polygons()
     }
     lim <- c(0.1, quantile(xy$absd, probs=0.95))
@@ -265,8 +267,8 @@ tmap_adm <- function(x0, x1, adm, sel=NULL, interplot=TRUE,
     tmap_mode("view")
     fig <- tm_basemap("OpenStreetMap.Mapnik")
   } else {
-    data("World")
-    fig <- tm_shape(World, bbox = x_bb)+
+    data("World", package = "tmap", envir = .pkgenv)
+    fig <- tm_shape(.pkgenv$World, bbox = x_bb)+
       tm_polygons()
   }
   fig <- fig +  tm_shape(adm)+

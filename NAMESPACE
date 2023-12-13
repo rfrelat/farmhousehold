@@ -1,1 +1,11 @@
 exportPattern("^[[:alpha:]]+")
+import(plotly)
+import(tmap)
+import(pals)
+import(sf)
+import(shiny)
+importFrom("graphics", "axis", "barplot", "boxplot", "legend", "par",
+                "pie", "polygon", "strwidth", "text")
+importFrom("stats", "complete.cases", "cor", "cor.test", "density",
+           "median", "quantile", "symnum")
+importFrom("utils", "data")
