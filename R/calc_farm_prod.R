@@ -1,6 +1,6 @@
 #' Calculate farm household characteristics
 #'
-#' This function summarize farm household activites
+#' This function summarize farm household activities
 #' based on information about crop, livestock and household
 #' @param crop crop information
 #' @param lstk livestock information

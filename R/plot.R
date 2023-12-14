@@ -1,6 +1,6 @@
 #' Barplot of the crop or livestock adoption
 #'
-#' This function make a barplot showing the most commun
+#' This function make a barplot showing the most popular
 #' crop or livestock in the dataset
 #' @param tab either crop or lvst table with columns hhid and name
 #' @param idlist full list of households id

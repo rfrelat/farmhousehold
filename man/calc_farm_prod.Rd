@@ -20,7 +20,7 @@ calc_farm_prod(crop, lstk, lstk_prod, hhinfo, conv_tlu, conv_energy)
 \item{conv_energy}{energy conversion of product from kg to kcal}
 }
 \description{
-This function summarize farm household activites
+This function summarize farm household activities
 based on information about crop, livestock and household
 }
 \keyword{summary}

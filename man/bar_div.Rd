@@ -30,7 +30,7 @@ bar_div(
 \item{marx}{extra margin for plotting the crop names (when not interactive plot)}
 }
 \description{
-This function make a barplot showing the most commun
+This function make a barplot showing the most popular
 crop or livestock in the dataset
 }
 \examples{
