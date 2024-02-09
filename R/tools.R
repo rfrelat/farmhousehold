@@ -78,7 +78,7 @@ Count_Spaces <- function(x, sep=" ", na.rm=TRUE){
 #' NAto0(c(-99, NA, -1:9))
 #'
 NAto0 <- function(x){
-  x <- is.numeric(x)
+  x <- as.numeric(x)
   x[is.na(x)] <- 0
   x[x<0] <- 0
   return(x)
@@ -114,6 +114,7 @@ sum_NAto0 <- function(x){
 #' @param x is a numeric vector
 #' @param ... additional elements that are passed to min() and max()
 #' @return the scaled vector with value between 0 and 1
+#' @export
 #' @examples
 #' scale01(c(-99, NA, -1:9))
 #'
@@ -126,27 +127,84 @@ scale01 <- function(x, ...) {
 }
 
 
-
-
-
-simplestring <- function(x) return(tolower(gsub("[()]", "", x)))
-
-cleanconv <- function(x) {
-  #remove brackets and ' '  and lower case
-  y <- tolower(gsub("[( )]", "", x))
-  #remove last 's'
-  y <- gsub("s$", "", y)
- return(y)
+#' Clean names
+#'
+#' @param x is a character vector
+#' @return the cleaned names without brackets, and spaces
+#' @export
+#' @examples
+#' cleanname(c("maize", "sweet potatoes", "apple(tree)"))
+#'
+cleanname <- function(x) {
+  # remove brackets, /, . and -
+  y <- tolower(gsub("[({/})]", " ", x))
+  y <- gsub("\\[", " ", y)
+  y <- gsub("\\]", " ", y)
+  y <- gsub("-", " ", y)
+  y <- gsub("\\.", " ", y)
+  # remoce numbers
+  y <- gsub("[0-9]", "", y)
+  # remove last space or underscore
+  y <- gsub("[ _]$", "", y)
+  # remove first space or underscore
+  y <- gsub("^[ _]", "", y)
+  # replace space for underscore
+  y <- gsub(" ", "_", y)
+  # make sure there are no multiple underscores
+  y <- gsub("___", "_", y)
+  y <- gsub("__", "_", y)
+  return(y)
 }
 
-cleanname <- function(x){
-  #lower case
-  y <- tolower(x)
-  #remove brackets
-  y <- gsub("[{()}]", "", y)
-  #replace ' ' by _
-  y <- gsub(" ", "_", y)
-  return(y)
+#' Find the best match from a list of known names
+#'
+#' @param x is the original names
+#' @param y is the list of known names
+#' @return the names that best match the known names
+#' @export
+#' @examples
+#' bestname(c("bean", "sweetpotatoes", "apples"),c("apple", "beans", "sweet_potatoes"))
+#'
+bestname <- function(x, y, warn=FALSE){
+  #normal cleaning
+  x <- cleanname(x)
+  y1 <- cleanname(y)
+  matchname <- y[match(x,y1)]
+  # test without _
+  x1 <- gsub("_", "", x)
+  y2 <- gsub("_", "", y1)
+  match1 <- y[match(x1, y2)]
+  matchname <- ifelse(is.na(matchname), match1, matchname)
+  # test without last s
+  match2 <- y[match(gsub("s$", "", x1), y2)]
+  matchname <- ifelse(is.na(matchname), match2, matchname)
+  match3 <- y[match(x1, gsub("s$", "", y2))]
+  matchname <- ifelse(is.na(matchname), match3, matchname)
+  match4 <- y[match(gsub("s$", "", x1), gsub("s$", "", y2))]
+  matchname <- ifelse(is.na(matchname), match4, matchname)
+
+  #return the best name, if none, return x]
+  if (warn & sum(is.na(matchname))>sum(is.na(x))){
+    warning(paste("Missing labels for", paste(sort(unique(x[is.na(matchname)])), collapse = ", ")))
+  }
+  matchname <- ifelse(is.na(matchname), x, matchname)
+  return(matchname)
+}
+
+
+#' Simplify a list of crop names with known names
+#'
+#' @param x is the original names
+#' @param conv_name is the list of known names
+#' @param warn add warning if the name is missing from conv_name
+#' @return the vector wuth the unique crop names
+#' @export
+#' @examples
+#' simplifynames(c("bean", "sweetpotatoes", "apples"),c("apple", "beans", "sweet_potatoes"))
+#'
+simplifynames <- function(x, conv_name, warn=TRUE){
+  ux <- sort(unique(unlist(strsplit(x, " "))))
+  sx <- sort(unique(bestname(ux, conv_name, warn=warn)))
 }
 
 conv_fun <- function(conv, x, other=NULL, cat=NULL, lab="otherspecify"){
@@ -159,11 +217,9 @@ conv_fun <- function(conv, x, other=NULL, cat=NULL, lab="otherspecify"){
     x <- cat[as.character(x)]
   }
   if (!is.null(other)){
-    x <- ifelse(cleanconv(x)==lab, other, x)
+    x <- ifelse(cleanname(x)==lab, other, x)
   }
-  x <- cleanconv(x)
-  # make sure the names are lower string
-  names(conv) <- cleanconv(names(conv))
+  x <- bestname(x, names(conv))
   # convert into kg
   y <- conv[x]
   # for no conversion, set to 1

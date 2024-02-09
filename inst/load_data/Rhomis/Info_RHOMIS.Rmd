@@ -1,0 +1,202 @@
+---
+title: "Documentation RHoMIS dataset"
+author: "Romain Frelat"
+date: "2023-11-31"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+source("Param_RHOMIS_2023.R")
+conv_F <- c(0.5, 0.75, 0.75, 0.86, 0.6) #female
+conv_M <- c(0.5, 0.75, 0.925, 1, 0.73) #male
+load("../Data/Processed/HHDB_RHOMIS_25092023.rda")
+```
+
+## Objectives
+
+This document records the steps and choices made to transform the RHoMIS dataset into the format of the Household Data Platform. It goes together and complements the script file `Get_RHOMIS_2023.R`. **The original dataset will be published soon (add url)**.
+
+
+## Crop table
+
+The crop table contains 8 columns with information on crop cultivation and usage.
+
+|  Name |         Definition        |   Unit   | 
+|:------|:--------------------------|:---------|
+| hhid  | household id              |          |
+| name  | name of the crop          |          |
+| land_area_ha| land cultivated     | hectare  |
+| harvest_kg | amount harvested     | kg       |
+| consumed_kg | amount consumed     | kg       |
+| sold_kg | amount sold             | kg       |
+| income_lcu | income from sells    | lcu      |
+| use_list | list all usages        | categories |
+
+
+
+#### Land area
+The land cultivated area was transformed into hectare with the *rhomis* package.  
+
+We estimated the land area per crop from the reported proportion of land cultivated per crop (6 categories: all 90%, most 70%, half 50%, underhalf 20%, little 10%, none 0%). We corrected these percentages when necessary to make sure that the sum of the crop areas was equal to the area of land cultivated (sum of the proportions=100%). 
+
+For households without proportions per crop, we assumed that the proportion of crop area is equal to the proportion of quantities harvested.
+
+
+
+
+\newpage
+## Livestock table
+
+The livestock table contains 3 columns with information on livestock herd
+
+|  Name |         Definition        |   Unit   | 
+|:------|:--------------------------|:---------|
+| hhid  | household id              |          |
+| name  | name of the livestock     |          |
+| n     | number of livestock kept  |          |
+
+
+The livestock are in 16 categories:
+bees, buffalo, camel, cattle, chicken, dogs, donkeys_horses, duck, fish,            goats, guinea_pigs, otherpoultry, oxen (**?**), pigs, rabbits, sheep.   
+
+  
+
+## Livestock production table
+The livestock production table contains 7 columns with information on livestock productions:  
+
+|  Name |         Definition        |   Unit   | 
+|:------|:--------------------------|:---------|
+| hhid  | household id              |          |
+| name  | name of the livestock     |          |
+| prod  | livestock production      |          |
+| harvest_kg | amount harvested     | kg       |
+| consumed_kg | amount consumed     | kg       |
+| sold_kg | amount sold             | kg       |
+| income_lcu | income from sells    | lcu      |
+
+We consider meat, milk, eggs and honey production as well as whole animal sales.
+
+
+#### Whole animal sales
+For the sales of whole animals, the quantities were given in number of animals. We converted the numbers into kg using the TLU conversion factors (1TLU=250kg). No quantities was consumed, the quantity harvested equals the quantity sold. 
+
+```{r conv_tlu}
+conv_tlu*250
+```
+
+## Household information table
+The initial household information table contains information on household composition, off farm activities, and food security.
+
+
+|  Name  |         Definition       | Unit   | 
+|:-------|:-------------------------|:-------|
+| hhid  | household id              |          |
+| country  | country of the survey      |          |
+| year  | year of the survey      |          |
+| gps_lat | latitude in decimal degrees | °N       |
+| gps_lon | longitude in decimal degrees | °E       |
+| hh_size_members | size of the household in number of persons |     |
+| hh_size_mae | size of the household in male adult equivalent | MAE |
+| head_age | age of the household head |     |
+| head_gender | gender of the household head | 'f' or 'm' |
+| off_farm_lcu | off farm income per year    | lcu      |
+| off_farm_div | diversity of off farm activities   |       |
+| hdds | household diet diversity score based on 10 groups    |       |
+| fies | Food Insecurity Experience Scale based on 8 questions   |       |
+| foodshortage_count | number of months with food shortage    |       |
+| foodshortage_months | name of the months with food shortage    |       |
+| currency_conversion_lcu_to_ppp | conversion from     | lcu/usd        |
+
+
+#### General information
+`hhid`is made of the prefix "LSMS_ETH_2018" and the variable `household_id`. This variable is a unique identifier for the household that can connect all the tables (crop, livestock, and livestock production).  
+
+The GPS coordinates are provided with a rounding at 0.1 decimal degree. The currency power parity purchase conversion factor is provided by the World Bank depending on the country and the year of the survey.  
+
+#### Household size
+The household composition is provided in section 1 of the household questionnaire. The male adult equivalent are calculated with 5 age-groups: 0-4, 5-10, 11-24, 25-50, 51+ and with the corresponding coefficient per gender and age class. 
+
+```{r conv_mae}
+conv_mae <- rbind("Male"=conv_M, "Female"=conv_F)
+colnames(conv_mae) <- c("0-4", "5-10", "11-24", "25-50", "51+")
+conv_mae
+```
+
+#### Off farm income
+We considered the employment (reported in section 4 of the household questionnaire) or businesses (reported in section 12). For employment, we calculated the number of hours worked, and the salary per hour based on the last payment. If the salary was higher than $1000birr/h$ we set it to $1000birr/h$. Then we multiplied the number of hours worked by the salary per hour to get the annual salary. If the annual salary resulted to be lower than the reported payment, we reported the payment as annual salary.
+
+#### Food security
+
+Last season (or average between good and bad season)
+```{r cat_hdds}
+convtime
+```
+
+The Food Insecurity Experience Scale was extracted from the 7-day recall of the FAO questions (section 8).  
+
+The months with food shortage was directly retrieve from questions in section 8.
+
+
+## Crop and Livestock summary
+
+The household information table also contains 28 columns with summary information from crop and livestock tables. 
+
+|  Name   |         Definition       |  Unit| 
+|:--------|:-------------------------|:-----|
+| hhid  | household id              |          |
+| land_cultivated_ha  | total land cultivated | ha          |
+| crop_div  | number of crop cultivated      |          |
+| crop_name | names of crop cultivated       |        |
+| crop_harvest_kg | total crop harvest       | kg       |
+| crop_yield_kg_per_ha | crop yield          | kg/ha     |
+| crop_sold_kg | quantity of crop sold       | kg |
+| crop_sold_perc | percentage of quantities of crop sold    | %      |
+| crop_income_div | number of different crop sold   |       |
+| crop_income_lcu | total income from crop production  | lcu   |
+| crop_value_lcu | value of crop produced but not sold | lcu   |
+| crop_consumed_kcal | energy value from crop consumed   | kcal  |
+| livestock_tlu | herd size              | tlu      |
+| lstk_div | number of livestock species herded     |        |
+| lstk_name | names of livestock species herded |      |
+| lstk_harvest_kg | total livestock product harvested     | kg |
+| lstk_sold_kg | quantity of livestock product sold       | kg |
+| lstk_sold_perc | percentage of livestock production sold    | %      |
+| lstk_income_div | number of different livestock products sold   |       |
+| lstk_income_lcu | total income from livestock production    | lcu      |
+| lstk_value_lcu |  value of livestock production not sold | lcu   |
+| lstk_consumed_kcal | energy value from livestock consumed   | kcal  |
+| farm_div | number of crop and livestock species     |        |
+| farm_harvest_kg | total farm production     | kg |
+| farm_sold_perc_kg | percentage of farm production sold    | %      |
+| farm_income_div | number of different farm products sold   |       |
+| farm_income_lcu | total income from farm production    | lcu      |
+| tot_income_lcu |  total income (farm + off farm) | lcu   |
+| farm_consumed_kcal | energy value from farm production consumed   | kcal  |
+| off_farm_perc | percentgae of income from off farm activities   | %      |
+
+All the values are calculated automatically with the function `summary_croplivestock()`. The calculations are simple and summarize per households the quantities reported in the crop and livestock tables.  
+
+
+For energy conversion, we used estimates mostly from the FoodData Central of the U.S.Departement of Agriculture (https://fdc.nal.usda.gov/). We could not find the energy conversion of *amboshika*, *kazmir*, *nueg*, *shiferaw*, *temporary gr* and these crop were not considered in energy calculations. Below are the energy conversion factors:
+```{r conv_kcal}
+conv_energy[conv_energy>0 & !is.na(conv_energy)]
+```
+
+
+## GIS information
+
+Based on the GPS coordinates of households, we extracted:  
+- the administrative region and district (from GADM)  
+- the agro ecological zone (from FAO 2012)  
+- the population density    
+- the travel time to cities  
+- the Koeppen climate classification  
+
+
+## Summary
+
+We kept only *rural* households with at least one crop or one livestock. In total, the dataset is made of `r nrow(hhinfo)` households, with information on `r nrow(crop)` crop cultivated and `r nrow(lstk)` livestock species. The dataset made of the four tables, together with tlu and energy conversion factors are binded together in the file `HHDB_LSMS_ETH2018.rda`.  
+
