@@ -13,10 +13,9 @@
 #' @export
 #' @examples
 #' data(hhdb_rhomis)
-#' attach(hhdb_rhomis)
 #'
-#' bar_div(crop, idlist=hhinfo$hhid)
-#' bar_div(lstk, idlist=hhinfo$hhid)
+#' bar_div(hhdb_rhomis$crop, idlist=hhdb_rhomis$hhinfo$hhid)
+#' bar_div(hhdb_rhomis$lstk, idlist=hhdb_rhomis$hhinfo$hhid)
 #'
 bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
                     interplot=FALSE, colcat="#1F77B4",
@@ -179,13 +178,13 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
 #' @export
 #' @examples
 #' data(hhdb_rhomis)
-#' attach(hhdb_rhomis)
 #'
 #' #distribution of land cultivated
-#' bar_hist(hhinfo$land_cultivated_ha)
+#' bar_hist(hhdb_rhomis$hhinfo$land_cultivated_ha)
 #'
 #' #land cultivated per HDDS score
-#' bar_hist(hhinfo$land_cultivated_ha, seg=hhinfo$hdds_score)
+#' bar_hist(hhdb_rhomis$hhinfo$land_cultivated_ha,
+#'          seg=hhdb_rhomis$hhinfo$hdds_score)
 #'
 bar_hist <- function(x, breaks = c(0, 0.5, 1, 2, 5, 10),
                      lab = NULL, xunit="ha",  pal=NULL,
@@ -297,13 +296,13 @@ bar_hist <- function(x, breaks = c(0, 0.5, 1, 2, 5, 10),
 #' @export
 #' @examples
 #' data(hhdb_rhomis)
-#' attach(hhdb_rhomis)
 #'
 #' #distribution of number of month with food insecurity
-#' bar_box(hhinfo$foodshortage_count)
+#' bar_box(hhdb_rhomis$hhinfo$foodshortage_count)
 #'
 #' #distribution of HDDS score per large region
-#' bar_box(hhinfo$hdds_score, lab="HDDS", seg=hhinfo$large_region)
+#' bar_box(hhdb_rhomis$hhinfo$hdds_score, lab="HDDS",
+#'         seg=hhdb_rhomis$hhinfo$large_region)
 #'
 bar_box <- function(x, interplot=FALSE, seg=NULL,
                     lab= "Number of months food insecure"){
@@ -375,16 +374,20 @@ bar_box <- function(x, interplot=FALSE, seg=NULL,
 #' @export
 #' @examples
 #' data(hhdb_rhomis)
-#' attach(hhdb_rhomis)
 #'
 #' #plot HDDS score
-#' bar_score(hhinfo, score="HDDS")
+#' bar_score(hhdb_rhomis, score="HDDS")
 #'
 #' #plot FIES per large region
-#' bar_score(hhinfo, score="FIES", seg=hhinfo$large_region)
+#' bar_score(hhdb_rhomis, score="FIES",
+#'           seg=hhdb_rhomis$hhinfo$large_region)
 #'
 bar_score <- function(tab, score="HDDS", pal= NULL, marx=6, rm0=FALSE,
                       interplot=FALSE, seg=NULL){
+
+  if(inherits(tab, "farmhousehold")){
+    tab <- tab$hhinfo
+  }
 
   #get the column starting with "score"
   col <- names(tab)[grep(paste0(score, "_"), names(tab), ignore.case = TRUE)]
@@ -528,10 +531,9 @@ bar_score <- function(tab, score="HDDS", pal= NULL, marx=6, rm0=FALSE,
 #' @export
 #' @examples
 #' data(hhdb_rhomis)
-#' attach(hhdb_rhomis)
 #'
 #' #plot the month with food shortage score
-#' bar_months(hhinfo$foodshortage_months)
+#' bar_months(hhdb_rhomis$hhinfo$foodshortage_months)
 #'
 bar_months <- function(x, sep=" ", interplot=FALSE,
                     lab= "Month with food insecurity"){
@@ -566,9 +568,9 @@ bar_months <- function(x, sep=" ", interplot=FALSE,
   }
 }
 
-#' Show the months with food insecurity
+#' Show the sources of income per household
 #'
-#' This function show the months with food insecurity
+#' This function show the value of production per sources
 #' @param tab the dataframe with information on the income activities, usually hhinfo
 #' @param qmax percentile that is not shown on y axis
 #' @param marx extra margin for plotting the names (when not interactive plot)
@@ -579,15 +581,18 @@ bar_months <- function(x, sep=" ", interplot=FALSE,
 #' @export
 #' @examples
 #' data(hhdb_rhomis)
-#' attach(hhdb_rhomis)
 #'
 #' #plot the source of income
-#' bar_income(hhinfo)
+#' bar_income(hhdb_rhomis)
 #'
 #' #plot the source of income per large region
-#' bar_income(hhinfo, seg=hhinfo$large_region)
+#' bar_income(hhdb_rhomis, seg=hhdb_rhomis$hhinfo$large_region)
 #'
 bar_income <- function(tab, qmax=0.95, marx=6, seg=NULL, interplot=FALSE, maxbar=100){
+  if(inherits(tab, "farmhousehold")){
+    tab <- tab$hhinfo
+  }
+
   if(!is.null(seg) & length(seg)!= nrow(tab)){
     stop("Segmentation list has different length than the variable")
   }
@@ -743,10 +748,9 @@ bar_income <- function(tab, qmax=0.95, marx=6, seg=NULL, interplot=FALSE, maxbar
 #' @export
 #' @examples
 #' data(hhdb_rhomis)
-#' attach(hhdb_rhomis)
 #'
 #' #plot the source of income
-#' plot_density(hhinfo$hh_size_mae, th=5)
+#' plot_density(hhdb_rhomis$hhinfo$hh_size_mae, th=5)
 #'
 plot_density <- function(x, th, lab="", corskew=TRUE, pal=c("red", "blue")){
   #make sure there is no NA or infinite values
@@ -790,10 +794,9 @@ plot_density <- function(x, th, lab="", corskew=TRUE, pal=c("red", "blue")){
 #' @export
 #' @examples
 #' data(hhdb_rhomis)
-#' attach(hhdb_rhomis)
 #'
 #' #plot the source of income
-#' pie_seg(hhinfo$large_region)
+#' pie_seg(hhdb_rhomis$hhinfo$large_region)
 #'
 #'
 pie_seg <- function(x, interplot=FALSE){

@@ -35,10 +35,9 @@ crop or livestock in the dataset
 }
 \examples{
 data(hhdb_rhomis)
-attach(hhdb_rhomis)
 
-bar_div(crop, idlist=hhinfo$hhid)
-bar_div(lstk, idlist=hhinfo$hhid)
+bar_div(hhdb_rhomis$crop, idlist=hhdb_rhomis$hhinfo$hhid)
+bar_div(hhdb_rhomis$lstk, idlist=hhdb_rhomis$hhinfo$hhid)
 
 }
 \keyword{adoption}

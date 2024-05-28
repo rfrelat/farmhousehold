@@ -1,10 +1,15 @@
 shinyServer(function(input, output, session) {
 
   # Tab 1 : DATASET --------------------------
+  db <- eventReactive(input$load, {
+    req(input$file)
+    hhdb <- readRDS(input$file$datapath)
+    return(hhdb)
+  })
+
   info <- eventReactive(input$load, {
     req(input$file)
-    load(input$file$datapath)
-    return(hhinfo)
+    return(db()$hhinfo)
   })
 
   output$inscale1 <- renderUI({
@@ -18,13 +23,13 @@ shinyServer(function(input, output, session) {
   output$insub1 <- renderUI({
     req(input$scale1)
     if (input$scale1 != "none"){
-    hhinfo <- info()
-    if (is.factor(hhinfo[,input$scale1])){
-      listO <- levels(hhinfo[,input$scale1])
-    } else {
-      listO <- sort(unique(hhinfo[,input$scale1]))
-    }
-    selectInput('sub1', input$scale1, listO)
+      hhinfo <- info()
+      if (is.factor(hhinfo[,input$scale1])){
+        listO <- levels(hhinfo[,input$scale1])
+      } else {
+        listO <- sort(unique(hhinfo[,input$scale1]))
+      }
+      selectInput('sub1', input$scale1, listO)
     }
   })
 
@@ -76,12 +81,12 @@ shinyServer(function(input, output, session) {
   })
 
   cropInput <- reactive({
-    load(input$file$datapath)
+    crop <- db()$crop
     return(crop[crop$hhid%in% hhInput()$hhid,])
   })
 
   lstkInput <- reactive({
-    load(input$file$datapath)
+    lstk <- db()$lstk
     return(lstk[lstk$hhid%in% hhInput()$hhid,])
   })
 
@@ -292,7 +297,7 @@ shinyServer(function(input, output, session) {
   output$invar3 <- renderUI({
     req(input$var2)
     var3 <- varY[varY%in%names(hhInput())]
-    var3 <- var3[-which(var2%in%c(input$var1, input$var2))]
+    var3 <- var3[-which(var3%in%c(input$var1, input$var2))]
     if (input$var2!="none" & input$segType=="User-defined"& length(var3)>1){
       selectInput('var3', "Variable 3",
                   c("none", var3))
@@ -316,59 +321,53 @@ shinyServer(function(input, output, session) {
 
   segInput <- reactive({
     df <- hhInput()
-    if(is.null(input$segType)){
-      seg <- df$region
-    } else { # req(input$segType)
-      if (input$segType=="Dorward"){
-        seg <- segmentation_litt(df, type = "dorward",
-                                 thPPP = input$thPPP,
-                                 thSale = input$thSale,
-                                 thOff = input$thOff)
-      }
-      if (input$segType=="Farm orientation"){
-        seg <- segmentation_litt(df, type = "orientation",
-                                 thPPP = input$thPPP,
-                                 thSale = input$thSale,
-                                 thOff = input$thOff,
-                                 thSale0= input$thSale2)
-      }
-      if (input$segType=="User-defined"){
-        req(input$var2)
-        abv1 <- abbreviate(gsub("_", " ", input$var1),
-                           minlength = 8, method="both.sides")
-        bk1 <- c(min(df[,input$var1], na.rm = TRUE), input$thvar1, max(df[,input$var1], na.rm = TRUE))
-        cat1 <- cut(df[,input$var1], breaks = bk1,
-                    include.lowest = TRUE,
-                    labels = paste0(abv1, c("-", "+")))
-
+    req(input$segType)
+    if (input$segType=="Dorward"){
+      seg <- segmentation_litt(df, type = "dorward",
+                               thPPP = input$thPPP,
+                               thSale = input$thSale,
+                               thOff = input$thOff)
+    }
+    if (input$segType=="Farm orientation"){
+      seg <- segmentation_litt(df, type = "orientation",
+                               thPPP = input$thPPP,
+                               thSale = input$thSale,
+                               thOff = input$thOff,
+                               thSale0= input$thSale2)
+    }
+    if (input$segType=="User-defined"){
+      abv1 <- abbreviate(gsub("_", " ", input$var1),
+                         minlength = 8, method="both.sides")
+      bk1 <- c(min(df[,input$var1], na.rm = TRUE), input$thvar1, max(df[,input$var1], na.rm = TRUE))
+      cat1 <- cut(df[,input$var1], breaks = bk1,
+                  include.lowest = TRUE,
+                  labels = paste0(abv1, c("-", "+")))
         seg <- cat1
-        if(input$var2!="none"){
-          abv2 <- abbreviate(gsub("_", " ", input$var2),
+      if(input$var2!="none"){
+        abv2 <- abbreviate(gsub("_", " ", input$var2),
+                           minlength = 8, method="both.sides")
+        bk2 <- c(min(df[,input$var2], na.rm = TRUE), input$thvar2,
+                 max(df[,input$var2], na.rm = TRUE))
+        cat2 <- cut(df[,input$var2], breaks = bk2,
+                    include.lowest = TRUE,
+                    labels = paste0(abv2, c("-", "+")))
+        seg <- paste(seg, cat2)
+        if(input$var3!="none"){
+          abv3 <- abbreviate(gsub("_", " ", input$var3),
                              minlength = 8, method="both.sides")
-          bk2 <- c(min(df[,input$var2], na.rm = TRUE), input$thvar2,
-                   max(df[,input$var2], na.rm = TRUE))
-          cat2 <- cut(df[,input$var2], breaks = bk2,
-                      include.lowest = TRUE,
-                      labels = paste0(abv2, c("-", "+")))
-
-          seg <- paste(seg, cat2)
-
-          if(input$var3!="none"){
-            abv3 <- abbreviate(gsub("_", " ", input$var3),
-                               minlength = 8, method="both.sides")
-            bk3 <- c(min(df[,input$var3], na.rm = TRUE), input$thvar3, max(df[,input$var3], na.rm = TRUE))
-            cat3 <- cut(df[,input$var3], breaks = bk3,
-                      include.lowest = TRUE,
-                      labels = paste0(abv3, c("-", "+")))
-            seg <- paste(seg, cat3)
-          }
+          bk3 <- c(min(df[,input$var3], na.rm = TRUE), input$thvar3, max(df[,input$var3], na.rm = TRUE))
+          cat3 <- cut(df[,input$var3], breaks = bk3,
+                    include.lowest = TRUE,
+                    labels = paste0(abv3, c("-", "+")))
+          seg <- paste(seg, cat3)
         }
       }
-      if (input$segType=="Geography"){
-        req(input$varC)
-        seg <- df[,input$varC]
-      }
     }
+    if (input$segType=="Geography"){
+      req(input$varC)
+      seg <- df[,input$varC]
+    }
+
     df$segmentation <- as.factor(seg)
     return(df)
   })
@@ -383,19 +382,19 @@ shinyServer(function(input, output, session) {
         } else {
           par(mfrow=c(2,1))
         }}
-      plot_density(df, input$var1, input$thvar1)
+      plot_density(df[, input$var1], input$thvar1)
       if(input$var2!="none"){
-        plot_density(df, input$var2, input$thvar2)
+        plot_density(df[, input$var2], input$thvar2)
         if(input$var3!="none"){
-          plot_density(df, input$var3, input$thvar3)
+          plot_density(df[, input$var3], input$thvar3)
         }
       }
     }
     if (input$segType%in%c("Dorward", "Farm orientation")){
       par(mfrow=c(3,1))
-      plot_density(df, "income_per_person_per_day_usd", input$thPPP)
-      plot_density(df, "farm_sold_perc_kg", input$thSale)
-      plot_density(df, "off_farm_perc", input$thOff)
+      plot_density(df$income_per_person_per_day_usd, input$thPPP)
+      plot_density(df$farm_sold_perc_kg, input$thSale)
+      plot_density(df$off_farm_perc, input$thOff)
     }
     if (input$segType=="Geography"){
       tmap_ind(df, input$varC, interplot=FALSE)

@@ -20,10 +20,9 @@ This function show the months with food insecurity
 }
 \examples{
 data(hhdb_rhomis)
-attach(hhdb_rhomis)
 
 #plot the month with food shortage score
-bar_months(hhinfo$foodshortage_months)
+bar_months(hhdb_rhomis$hhinfo$foodshortage_months)
 
 }
 \keyword{food}

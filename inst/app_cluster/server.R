@@ -4,35 +4,51 @@ shinyServer(function(input, output, session) {
   info <- eventReactive(input$load, {
     req(input$file)
 
-    # Changes in read.table
-    load(input$file$datapath)
-    row.names(hhinfo) <- hhinfo$hhid
+    if (grepl("rds$", tolower(input$file$datapath))){
+      hhdb <- readRDS(input$file$datapath)
+      hhinfo <- hhdb$hhinfo
+    } else {
+      hhinfo <- read.csv(input$file$datapath)
+    }
+    # row.names(hhinfo) <- hhinfo$hhid
     if(!"region"%in%names(hhinfo) & "adm1"%in% names(hhinfo)){
       hhinfo$region <- hhinfo$adm1
     }
 
+    row.names(hhinfo) <- 1:nrow(hhinfo)
+    sc1 <- c("none", scaleChoices[scaleChoices%in%names(hhinfo)])
     updateSelectInput(session, "scale1","Subsetting:",
-                      choices = scaleChoices[scaleChoices%in%names(hhinfo)])
+                      choices = sc1)
+
+    if (sum(varChoices %in% names(hhinfo))<10){
+      vc1 <- names(hhinfo)
+      sl1 <- vc1[2:min(c(5, length(vc1)))]
+    } else {
+      vc1 <- varChoices[varChoices%in%names(hhinfo)]
+      sl1 <- varDefault[varDefault%in%names(hhinfo)]
+    }
     updateSelectInput(session, "select","Options:",
-                      choices = varChoices[varChoices%in%names(hhinfo)],
-                      selected = varDefault[varDefault%in%names(hhinfo)])
+                      choices = vc1, selected = sl1)
     return(hhinfo)
   })
 
   output$insub1 <- renderUI({
-    hhinfo <- info()
-    if (is.factor(hhinfo[,input$scale1])){
-      listO <- c("All", levels(hhinfo[,input$scale1]))
-    } else {
-      listO <- c("All", sort(unique(hhinfo[,input$scale1])))
+    req(input$scale1)
+    if (input$scale1 != "none"){
+      hhinfo <- info()
+      if (is.factor(hhinfo[,input$scale1])){
+        listO <- levels(hhinfo[,input$scale1])
+      } else {
+        listO <- sort(unique(hhinfo[,input$scale1]))
+      }
+      selectInput('sub1', input$scale1, listO)
     }
-    selectInput('sub1', input$scale1, listO, selected="All")
   })
 
   hhInput <- reactive({
+    req(input$scale1)
     hhinfo <- info()
-    req(input$sub1)
-    if (input$sub1 != "All"){
+    if (input$scale1 != "none"){
       sel <- hhinfo[,input$scale1]==input$sub1
     } else {
       sel <- rep(TRUE, nrow(hhinfo))
@@ -67,13 +83,6 @@ shinyServer(function(input, output, session) {
     }
     return(tabS)
   })
-
-  # subhhInput <- reactive({
-  #   req(input$sub1)
-  #   hhinfo <- hhInput()
-  #   tabS <- hhinfo[,input$select]
-  #   return(hhinfo[complete.cases(tabS),])
-  # })
 
   output$nvar <- renderUI({
     tabS <- hhInput()[,input$select]
@@ -122,6 +131,13 @@ shinyServer(function(input, output, session) {
   output$yaxis <- renderUI({
     scale <- paste0("PC", 1:input$npc)
     selectInput('ypc', "y-axis", scale, selected="PC2")
+  })
+
+  output$grp <- renderUI({
+    sc1 <- as.character(scaleChoices)
+    sc1 <- sc1[sc1 %in% names(hhInput())]
+    selectInput('fac', "grouped",
+                c("no", "cluster", sc1), selected="no")
   })
 
   pcaInput <- reactive({
@@ -178,10 +194,16 @@ shinyServer(function(input, output, session) {
       cluster <- kmeans(pca1$li, centers = input$nclu, nstart = 50)$cluster
     }
     tab1 <- hhInput()
+    sc1 <- as.character(scaleChoices)
+    sc1 <- sc1[sc1 %in% names(tab1)]
+    fac1 <- tab1[match(row.names(pca1$li), row.names(tab1)), sc1]
+
     out <- data.frame(
       "cluster"=as.factor(cluster),
-      "region"=as.factor(tab1[match(row.names(pca1$li), tab1$hhid),"region"])
+      fac1
     )
+    out <- as.data.frame(lapply(out, as.factor))
+    colnames(out) <- c("cluster", sc1)
     return(out)
   })
 

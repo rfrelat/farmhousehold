@@ -8,7 +8,7 @@ tmap_hh <- function(x, interplot=FALSE, j=0.05){
   leg <- paste0(
     "Country: ", x$country, "/n",
     "Project: ", x$project, "<br>",
-    "Köppen: ", x$koeppen, "\n",
+    "Koeppen: ", x$koeppen, "\n",
     "FS: ", x$farming_system
   )
   xy <- data.frame(
@@ -70,7 +70,7 @@ tmap_ind <- function(x, var, interplot=FALSE, j=0.05){
     paste0(var, ": "), x[,var], "/n",
     "Country: ", x$country, "/n",
     "Project: ", x$project, "<br>",
-    "Köppen: ", x$koeppen, "\n",
+    "Koeppen: ", x$koeppen, "\n",
     "FS: ", x$farming_system
   )
   xy <- data.frame(
@@ -108,7 +108,7 @@ lymap_ind <- function(x, var, zoom=NULL, j=0.05){
     paste0(var, ": "), x[,var], "<br>",
     "Country: ", x$country, "<br>",
     "Project: ", x$project, "<br>",
-    "Koppen: ", x$koeppen, "\n",
+    "Koeppen: ", x$koeppen, "\n",
     "FS: ", x$farming_system
   )
 

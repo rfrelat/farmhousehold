@@ -7,7 +7,7 @@ library(dplyr) #for fast row binding
 source("Param_RHOMIS.R")
 
 # 1. Load dataset ----------------------
-wd <- "../../../../../ConsultancyBr/ILRI_DataPlatform/Data/Rhomis_last/"
+wd <- "../Data/Rhomis_last/"
 # Load processed dataset
 tab <- read.csv(paste0(wd, "full_survey_data.csv"))
 dim(tab) #54873  1599
@@ -219,7 +219,6 @@ listmonth <- sapply(listmonth, uniqueNA)
 foodshortage_months<-sapply(listmonth, paste, collapse = " ")
 foodshortage_count<-sapply(listmonth, length)
 
-
 ifun <- function(x) {
   if (sum(is.na(x))==length(x)){
     return(NA)
@@ -259,7 +258,6 @@ fies <- tab[,paste0("fies_", 1:8)]
 fies <- apply(fies=="y",2,as.numeric)
 colnames(fies) <- fies_lab
 # table(rowSums(fies),ind$fies_score)
-
 
 
 colH <- c("hhid", "id_form", "year", "country",
@@ -396,4 +394,4 @@ hhinfo$large_region <- large[hhinfo$country]
 rhomis <- list(crop, lstk, lstk_prod, hhinfo,
                conv_tlu, conv_energy)
 save(rhomis,
-     file="../Data/Processed/HHDB_RHOMIS_15012024.rda")
+     file="../Data/Processed/HHDB_RHOMIS_09022024.rda")

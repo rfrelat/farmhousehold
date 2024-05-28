@@ -16,10 +16,9 @@ This function show the threshold of a numeric variable
 }
 \examples{
 data(hhdb_rhomis)
-attach(hhdb_rhomis)
 
 #plot the source of income
-pie_seg(hhinfo$large_region)
+pie_seg(hhdb_rhomis$hhinfo$large_region)
 
 
 }

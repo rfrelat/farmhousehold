@@ -9,9 +9,9 @@ shinyUI(fluidPage(
 
   tabPanel("Dataset",
            fluidRow(column(3,
-                     fileInput('file', 'Choose dataset',
-                               accept = c('.rda','.Rdata','.rds')),
-                     actionButton("load", "Load data"),
+                     fileInput('file', 'Choose farmhousehold dataset',
+                               accept = c('.rds', '.RDS')),
+                     actionButton("load", "Load RDS data"),
                      uiOutput('inscale1'),
 
                      uiOutput('insub1'),
@@ -84,7 +84,7 @@ shinyUI(fluidPage(
            fluidRow(column(3,
                            selectInput("segType", h5("Segmentation:"),
                                        choices = c(segChoices),
-                                       selected = "Geography"),
+                                       selected = "User-defined"),
                            uiOutput('inseg'),
                            uiOutput('inthvar1'),
                            uiOutput('invar2'),

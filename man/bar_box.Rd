@@ -26,13 +26,13 @@ such as the HDDS score or the number of months with food insecurity
 }
 \examples{
 data(hhdb_rhomis)
-attach(hhdb_rhomis)
 
 #distribution of number of month with food insecurity
-bar_box(hhinfo$foodshortage_count)
+bar_box(hhdb_rhomis$hhinfo$foodshortage_count)
 
 #distribution of HDDS score per large region
-bar_box(hhinfo$hdds_score, lab="HDDS", seg=hhinfo$large_region)
+bar_box(hhdb_rhomis$hhinfo$hdds_score, lab="HDDS",
+        seg=hhdb_rhomis$hhinfo$large_region)
 
 }
 \keyword{boxplot}

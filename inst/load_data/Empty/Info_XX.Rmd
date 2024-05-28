@@ -1,0 +1,138 @@
+---
+title: "Documentation on RHoMIS dataset"
+author: "Romain Frelat"
+date: "2024-05-27"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+source("Param_RHOMIS.R")
+conv_F <- c(0.5, 0.75, 0.75, 0.86, 0.6) #female
+conv_M <- c(0.5, 0.75, 0.925, 1, 0.73) #male
+load("../Data/Processed/HHDB_RHOMIS_27052024.rda")
+```
+
+## Objectives
+
+This empty document should records the steps and choices made to transform any dataset into the format of the [farmhousehold Data Platform](https://github.com/rfrelat/farmhousehold). It goes together and complements the script file `Get_XX.R`, and `Param_XX.R`.
+
+
+## Crop table
+
+The crop table must contains at least 8 columns with information on crop cultivation and usage in standard unit (ha and kg). You should harmonize the name of crop and make sure all crop listed have values on energy content.
+
+|  Name |         Definition        |   Unit   | 
+|:------|:--------------------------|:---------|
+| hhid  | household id              |          |
+| name  | name of the crop          |          |
+| land_area_ha| land cultivated     | hectare  |
+| harvest_kg | amount harvested     | kg       |
+| consumed_kg | amount consumed     | kg       |
+| sold_kg | amount sold             | kg       |
+| income_lcu | income from sells    | lcu      |
+
+
+
+## Livestock table
+
+The livestock table must contains at least 3 columns with information on livestock herd. The name of livestock species should be harmonized, and all species listed must have a coefficient factor for the tropical livestock unit. 
+
+|  Name |         Definition        |   Unit   | 
+|:------|:--------------------------|:---------|
+| hhid  | household id              |          |
+| name  | name of the livestock     |          |
+| n     | number of livestock kept  |          |
+
+
+\newpage  
+## Livestock production table
+The livestock production table contains, at least, 7 columns with information on livestock productions. Among other products, you can consider meat, milk, eggs, honey, manure, or even traction power if rented out.
+
+|  Name |         Definition        |   Unit   | 
+|:------|:--------------------------|:---------|
+| hhid  | household id              |          |
+| name  | name of the livestock     |          |
+| prod  | livestock production      |          |
+| harvest_kg | amount harvested     | kg       |
+| consumed_kg | amount consumed     | kg       |
+| sold_kg | amount sold             | kg       |
+| income_lcu | income from sells    | lcu      |
+
+
+
+## Household information table
+The initial household information table should contain information on household composition, GPS location (if available), off farm activities, and food security.
+
+
+|  Name  |         Definition       | Unit   | 
+|:-------|:-------------------------|:-------|
+| hhid  | household id              |          |
+| country  | country of the survey      |          |
+| year  | year of the survey      |          |
+| gps_lat | latitude in decimal degrees | °N       |
+| gps_lon | longitude in decimal degrees | °E       |
+| hh_size_members | size of the household in number of persons |     |
+| hh_size_mae | size of the household in male adult equivalent | MAE |
+| head_age | age of the household head |     |
+| head_gender | gender of the household head | 'f' or 'm' |
+| off_farm_lcu | off farm income per year    | lcu      |
+| off_farm_div | diversity of off farm activities   |       |
+| currency_conversion_lcu_to_ppp | conversion from     | lcu/usd        |
+| hdds | household diet diversity score based on 10 groups    |       |
+| fies | Food Insecurity Experience Scale based on 8 questions   |       |
+| foodshortage_count | number of months with food shortage    |       |
+| foodshortage_months | name of the months with food shortage    |       |
+
+
+\newpage
+## Crop and Livestock summary
+
+The household information table also contains 28 columns with summary information from crop and livestock tables. This is calculated automatically with the function `calc_farm_prod()`. The calculations are simple and summarize, per household, the quantities reported in the crop and livestock tables.   
+
+To run the calculation you need the energy conversion (`conv_energy`) for all crop and livestock product listed in the table above, and the TLU conversion factor (`conv_tlu`). For the energy content, a good source of information is the FoodData Central of the U.S.Departement of Agriculture (https://fdc.nal.usda.gov/).
+
+|  Name   |         Definition       |  Unit| 
+|:--------|:-------------------------|:-----|
+| hhid  | household id              |          |
+| land_cultivated_ha  | total land cultivated | ha          |
+| crop_div  | number of crop cultivated      |          |
+| crop_name | names of crop cultivated       |        |
+| crop_harvest_kg | total crop harvest       | kg       |
+| crop_yield_kg_per_ha | crop yield          | kg/ha     |
+| crop_sold_kg | quantity of crop sold       | kg |
+| crop_sold_perc | percentage of quantities of crop sold    | %      |
+| crop_income_div | number of different crop sold   |       |
+| crop_income_lcu | total income from crop production  | lcu   |
+| crop_value_lcu | value of crop produced but not sold | lcu   |
+| crop_consumed_kcal | energy value from crop consumed   | kcal  |
+| livestock_tlu | herd size              | tlu      |
+| lstk_div | number of livestock species herded     |        |
+| lstk_name | names of livestock species herded |      |
+| lstk_harvest_kg | total livestock product harvested     | kg |
+| lstk_sold_kg | quantity of livestock product sold       | kg |
+| lstk_sold_perc | percentage of livestock production sold    | %      |
+| lstk_income_div | number of different livestock products sold   |       |
+| lstk_income_lcu | total income from livestock production    | lcu      |
+| lstk_value_lcu |  value of livestock production not sold | lcu   |
+| lstk_consumed_kcal | energy value from livestock consumed   | kcal  |
+| farm_div | number of crop and livestock species     |        |
+| farm_harvest_kg | total farm production     | kg |
+| farm_sold_perc_kg | percentage of farm production sold    | %      |
+| farm_income_div | number of different farm products sold   |       |
+| farm_income_lcu | total income from farm production    | lcu      |
+| tot_income_lcu |  total income (farm + off farm) | lcu   |
+| farm_consumed_kcal | energy value from farm production consumed   | kcal  |
+| off_farm_perc | percentgae of income from off farm activities   | %      |
+
+
+## GIS information
+
+If interested, you can extract spatial information based on the GPS coordinates of households. Here are a list of spatial raster with relevant information, you can find more spatial data in the [geodata package](https://github.com/rspatial/geodata).   
+- the Dixon farming system classification for Sub-Saharan Africa [Dixon et al. 2021](https://www.routledge.com/Farming-Systems-and-Food-Security-in-Africa-Priorities-for-Science-and-Policy-Under-Global-Change/Dixon-Garrity-Boffa-Williams-Amede-Auricht-Lott-Mburathi/p/book/9781032082141)
+- the population density estimated by the [Gridded Population of the World (GPWv4)](https://sedac.ciesin.columbia.edu/data/collection/gpw-v4/documentation)   
+- the travel time to cities estimated by [Nelson et al. 2019](https://www.nature.com/articles/s41597-019-0265-5) 
+- the Koeppen's Climate Classification from:  
+Beck, H.E., et al. (2018) "Present and future Köppen-Geiger climate classification maps at 1-km resolution", *Nature Scientific Data*, 5, 180214 [DOI 10.1038/sdata.2018.214](https://doi.org/10.1038/sdata.2018.214)

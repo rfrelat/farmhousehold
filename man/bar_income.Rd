@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.R
 \name{bar_income}
 \alias{bar_income}
-\title{Show the months with food insecurity}
+\title{Show the sources of income per household}
 \usage{
 bar_income(
   tab,
@@ -27,17 +27,16 @@ bar_income(
 \item{maxbar}{number of bars to be plotted. If too high, the barplot is hardly readable.}
 }
 \description{
-This function show the months with food insecurity
+This function show the value of production per sources
 }
 \examples{
 data(hhdb_rhomis)
-attach(hhdb_rhomis)
 
 #plot the source of income
-bar_income(hhinfo)
+bar_income(hhdb_rhomis)
 
 #plot the source of income per large region
-bar_income(hhinfo, seg=hhinfo$large_region)
+bar_income(hhdb_rhomis, seg=hhdb_rhomis$hhinfo$large_region)
 
 }
 \keyword{income}

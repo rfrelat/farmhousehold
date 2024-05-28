@@ -35,13 +35,13 @@ such as the HDDS or the FIES
 }
 \examples{
 data(hhdb_rhomis)
-attach(hhdb_rhomis)
 
 #plot HDDS score
-bar_score(hhinfo, score="HDDS")
+bar_score(hhdb_rhomis, score="HDDS")
 
 #plot FIES per large region
-bar_score(hhinfo, score="FIES", seg=hhinfo$large_region)
+bar_score(hhdb_rhomis, score="FIES",
+          seg=hhdb_rhomis$hhinfo$large_region)
 
 }
 \keyword{diet}

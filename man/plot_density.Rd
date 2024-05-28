@@ -22,10 +22,9 @@ This function show the threshold of a numeric variable
 }
 \examples{
 data(hhdb_rhomis)
-attach(hhdb_rhomis)
 
 #plot the source of income
-plot_density(hhinfo$hh_size_mae, th=5)
+plot_density(hhdb_rhomis$hhinfo$hh_size_mae, th=5)
 
 }
 \keyword{density}

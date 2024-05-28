@@ -35,13 +35,13 @@ such as land cultivated, livestock herd size, family size, ...
 }
 \examples{
 data(hhdb_rhomis)
-attach(hhdb_rhomis)
 
 #distribution of land cultivated
-bar_hist(hhinfo$land_cultivated_ha)
+bar_hist(hhdb_rhomis$hhinfo$land_cultivated_ha)
 
 #land cultivated per HDDS score
-bar_hist(hhinfo$land_cultivated_ha, seg=hhinfo$hdds_score)
+bar_hist(hhdb_rhomis$hhinfo$land_cultivated_ha,
+         seg=hhdb_rhomis$hhinfo$hdds_score)
 
 }
 \keyword{hist}

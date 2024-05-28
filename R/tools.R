@@ -109,6 +109,21 @@ sum_NAto0 <- function(x){
   return(sum(NAto0(x)))
 }
 
+#' Transform NA and negative values to 1 (for conversion factors)
+#'
+#' @param x is a numeric vector
+#' @return a vector with NA and negative values transformed into 1
+#' @export
+#' @examples
+#' NAto1(c(-99, NA, -1:9))
+#'
+NAto1 <- function(x){
+  x <- as.numeric(x)
+  x[is.na(x)] <- 1
+  x[x<0] <- 1
+  return(x)
+}
+
 #' Scale values between 0 and 1
 #'
 #' @param x is a numeric vector
@@ -160,6 +175,7 @@ cleanname <- function(x) {
 #'
 #' @param x is the original names
 #' @param y is the list of known names
+#' @param warn whether to show a warning if missing names
 #' @return the names that best match the known names
 #' @export
 #' @examples
@@ -207,17 +223,30 @@ simplifynames <- function(x, conv_name, warn=TRUE){
   sx <- sort(unique(bestname(ux, conv_name, warn=warn)))
 }
 
-conv_fun <- function(conv, x, other=NULL, cat=NULL, lab="otherspecify"){
-  if (!is.null(cat)){
-    miss <- x[!as.character(x)%in%names(cat)]
+#' Find conversion factors for a vector of units
+#'
+#' @param conv the conversion factors
+#' @param x the original unit names
+#' @param other the unit names of other (optional)
+#' @param cate conversion categories if x are numbers instead of string
+#' @param labother label for 'other'
+#' @param warn whether to show a warning if missing names
+#' @return the vector with the conversion factors
+#' @export
+
+conv_fun <- function(conv, x, other=NULL, cate=NULL,
+                     labother=c("other", "otherspecify"),
+                     warn=TRUE){
+  if (!is.null(cate)){
+    miss <- x[!as.character(x)%in%names(cate)]
     miss <- miss[!is.na(miss)&duplicated(miss)]
     if(length(miss)>0){
       warning(paste("Missing conversion categories for", paste(miss, collapse = ", ")))
     }
-    x <- cat[as.character(x)]
+    x <- cate[as.character(x)]
   }
   if (!is.null(other)){
-    x <- ifelse(cleanname(x)==lab, other, x)
+    x <- ifelse(cleanname(x)%in%labother, other, x)
   }
   x <- bestname(x, names(conv))
   # convert into kg
@@ -226,7 +255,7 @@ conv_fun <- function(conv, x, other=NULL, cat=NULL, lab="otherspecify"){
   y[x==""] <- 1
   # check missing conversion
   miss <- table(x[is.na(y)&!is.na(x)])
-  if(length(miss)>0){
+  if(length(miss)>0 & warn){
     if(max(miss)>1){
       warning(paste("Missing conversion factor for", paste(names(miss)[miss>1], collapse = ", ")))
     }
@@ -260,7 +289,4 @@ panel.cor.m <- function(x, y, digits=2, method="pearson")
 # }
 
 
-# NAto1 <- function(x){
-#   x[is.na(x)] <- 1
-#   return(x)
-# }
+

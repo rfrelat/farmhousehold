@@ -9,7 +9,7 @@ shinyUI(fluidPage(
            fluidRow(h4("1. Select dataset"),
                     column(6,
                            fileInput('file', 'Choose dataset',
-                                     accept = c('.rda','.Rdata','.rds')),
+                                     accept = c('.csv','.rds', '.RDS')),
                            actionButton("load", "Load data")),
                     column(6,
                            selectInput("scale1", "Subsetting:",
@@ -44,8 +44,7 @@ shinyUI(fluidPage(
                                        min = 2, max = 10, value = 3, step = 1),
                            uiOutput('xaxis'),
                            uiOutput('yaxis'),
-                           selectInput('fac', "grouped",
-                                       c("no", "region", "cluster"), selected="no")
+                           uiOutput('grp')
                            ),
                     column(5, plotOutput("corcircle")),
                     column(5, plotOutput("class"))),

@@ -10,8 +10,10 @@ suppressPackageStartupMessages({
 if(Sys.getenv('SHINY_PORT') == "") options(shiny.maxRequestSize=10000*1024^2)
 
 scaleChoices <- list("Country"="country",
+                     "Region"='region',
                      "Project"="project",
-                     "Köppen climate"="koeppen")
+                     "Köppen climate"="koeppen",
+                     "Large region"= "large_region")
 
 varChoices <- c("land_cultivated_ha","livestock_tlu", "hh_size_mae",
                 "foodshortage_count", "hdds",
