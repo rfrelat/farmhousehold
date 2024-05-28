@@ -29,3 +29,18 @@ runCluster <- function() {
 
   shiny::runApp(appDir, display.mode = "normal")
 }
+
+#' Interactive positive deviant analysis
+#'
+#' Locally run shiny app to identify multidimensional
+#' positive deviant households
+#'
+#' @export
+runPosdev <- function() {
+  appDir <- system.file("app_posdev", package = "farmhousehold")
+  if (appDir == "") {
+    stop("Could not find the directory. Try re-installing `farmhousehold`.", call. = FALSE)
+  }
+  
+  shiny::runApp(appDir, display.mode = "normal")
+}
