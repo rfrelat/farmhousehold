@@ -55,9 +55,9 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
                      "col"=colcat)
     no <- sum(!idlist%in%tab$hhid)
     none <- data.frame("name"="none",
-                         "nhh"=as.numeric(no),
-                         "perc"=as.numeric(no)/length(idlist)*100,
-                         "col"="black")
+                       "nhh"=as.numeric(no),
+                       "perc"=as.numeric(no)/length(idlist)*100,
+                       "col"="black")
     df <- rbind(df, none)
     # keep only the one above the threshold
     df <- df[df$perc>th,]
@@ -90,10 +90,17 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
     }
   } else { #with segmentation
     seg <- as.factor(seg)
+
     seglstk <- seg[match(colnames(hhname), idlist)]
     df <- rowsum(apply(hhname>0,1,as.numeric),seglstk, na.rm=TRUE)
     nolstk <- table(seg[!idlist%in%colnames(hhname)])
-    # df <- cbind(df, "none"=nolstk)
+    # fill in with 0 if missing group
+    if (nrow(df)!=length(nolstk)){
+      df <- df[match(names(nolstk), row.names(df)),]
+      row.names(df) <- names(nolstk)
+      df[is.na(df)] <- 0
+    }
+
 
     dfp <- df/as.numeric(table(seg))*100
     # set threshold to keep livestock
@@ -101,14 +108,19 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
       keeplstk <- dfp>th
       df <- df[,keeplstk]
       df <- df[order(df, decreasing = TRUE)]
-      pal=pals::brewer.set1(length(df))
+      # if (length(df>2)){
+      pal <- pals::brewer.set1(max(c(length(df), 3)))
+      # } else {
+      #   pal <- rainbow(2)
+      # }
+
       dfp <- data.frame(t(df/as.numeric(table(seg))))
       row.names(dfp) <- names(nolstk)
     } else {
-      keeplstk <- colSums(dfp>th)>1
+      keeplstk <- colSums(dfp>th)>=1
       df <- df[,keeplstk]
       df <- df[,order(colSums(df), decreasing = TRUE)]
-      pal=pals::brewer.set1(ncol(df))
+      pal <- pals::brewer.set1(max(c(length(df), 3)))
       dfp <- data.frame(df/as.numeric(table(seg)))
     }
 
@@ -121,7 +133,7 @@ bar_div <- function(tab, idlist=NULL, th=10, seg=NULL,
       barplot( -nolstkp, col="black", add=TRUE, las=2)
       legend(max(barx)+0.9, max(rowSums(dfp))*0.8,
              legend = c(rev(names(dfp)), "None"),
-              fill = c(rev(pals::brewer.set1(ncol(dfp))), "black"), xpd=NA)
+              fill = c(rev(pal), "black"), xpd=NA)
       par(mar=par()$mar-c(marx,0,0,marx*1.3))
       invisible(dfp)
     } else {
@@ -393,7 +405,9 @@ bar_score <- function(tab, score="HDDS", pal= NULL, marx=6, rm0=FALSE,
   col <- names(tab)[grep(paste0(score, "_"), names(tab), ignore.case = TRUE)]
   #but not the score itself
   col <- col[-grep("_score$", col, ignore.case = TRUE)]
-
+  #nor season
+  col <- col[-grep("_season$", col, ignore.case = TRUE)]
+  col <- col[-grep("_month$", col, ignore.case = TRUE)]
   if(length(col)== 0){
     stop("Can not find the columns of the score")
   }

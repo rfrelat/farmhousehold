@@ -9,9 +9,6 @@ suppressPackageStartupMessages({
 
 if(Sys.getenv('SHINY_PORT') == "") options(shiny.maxRequestSize=10000*1024^2)
 
-logV <- c("crop_yield_kg_per_ha",
-          "lstk_yield_kg_per_tlu",
-          "income_usd")
 varY <- c("land_cultivated_ha","livestock_tlu", "hh_size_mae",
           "crop_yield_kg_per_ha",
           "lstk_yield_kg_per_tlu",
@@ -23,7 +20,7 @@ varY <- c("land_cultivated_ha","livestock_tlu", "hh_size_mae",
           "population_2020", "travel_time_cities")
 
 # all variables
-varX <- c("segmentation", "country", "region", "koeppen", "farming_system",
+varX <- c("large_region", "country", "region", "koeppen", "farming_system","segmentation",
           varY)
 
 # explanatory variable
@@ -32,6 +29,7 @@ varZ <- c("none","region", "koeppen", "farming_system", "travel_time_cities")
 scaleChoices <- c(
   "large_region",
   "country",
+  "region",
   "koeppen",
   "farming_system",
   "project")

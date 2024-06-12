@@ -13,12 +13,14 @@ shinyUI(fluidPage(
                                accept = c('.rds', '.RDS')),
                      actionButton("load", "Load RDS data"),
                      uiOutput('inscale1'),
-
                      uiOutput('insub1'),
                      uiOutput('inscale2'),
-                     uiOutput('insub2')),
+                     uiOutput('insub2'),
+                     uiOutput('inmap')),
+
                     column(9,
                      withSpinner(tmapOutput('tmapdata'), type=4),
+                     h5("Locations are approximated to the nearest 0.01 degree and jittered to safeguard the privacy of households."),
                      textOutput("nhh"))
                     )
     ),
@@ -31,7 +33,7 @@ shinyUI(fluidPage(
                       h5("Crop popularity"),
                       withSpinner(plotlyOutput('popcrop'), type=4))),
              fluidRow(
-               column(3, checkboxInput("segcrop", "Summary per groups of households",
+               column(6, checkboxInput("segcrop", "Summary per groups of households",
                                        value = FALSE))
              )
     ),
@@ -42,7 +44,7 @@ shinyUI(fluidPage(
              column(6, h5("Livestock popularity"),
                     withSpinner(plotlyOutput('poplstk'), type=4))),
            fluidRow(
-             column(3, checkboxInput("seglstk", "Summary per groups of households",
+             column(6, checkboxInput("seglstk", "Summary per groups of households",
                                      value = FALSE))
            )
     ),
@@ -60,12 +62,12 @@ shinyUI(fluidPage(
                           column(7, h5(" "), withSpinner(plotlyOutput('mfi_which'), type=4)),
                  ),
                  tabPanel("FIES",
-                          column(5, h5("Food Security Experience Scale"),
+                          column(5, h5("Food Insecurity Experience Scale"),
                                  withSpinner(plotlyOutput('fies_bar'), type=4)),
                           column(7, h5(" "), withSpinner(plotlyOutput('fies_group'), type=4))
                  ))),
              fluidRow(
-               column(3, checkboxInput("segfs", "Summary per groups of households",
+               column(6, checkboxInput("segfs", "Summary per groups of households",
                                        value = FALSE))
              )
     ),
@@ -76,7 +78,7 @@ shinyUI(fluidPage(
              column(7, h5("Distribution of value of activities"),
                     withSpinner(plotlyOutput('income'), type=4))),
            fluidRow(
-             column(3, checkboxInput("segecon", "Summary per groups of households",
+             column(6, checkboxInput("segecon", "Summary per groups of households",
                                      value = FALSE))
            )
     ),
@@ -91,17 +93,10 @@ shinyUI(fluidPage(
                            uiOutput('inthvar2'),
                            uiOutput('invar3'),
                            uiOutput('inthvar3')),
-                    column(5, plotOutput("plotseg1")),
-                    column(4, plotlyOutput("plotseg2"))
+                    column(4, plotOutput("plotseg1")),
+                    column(5, plotlyOutput("plotseg2"))
            )
-    ),
-    tabPanel("Spatial",
-           fluidRow(column(3,selectInput("mapvar", h5("Variable:"),
-                                         choices = varX,
-                                         selected = "hdds_bad_season")),
-                    column(9,
-                           withSpinner(tmapOutput("mapplot"), type=4))
-           ))
+    )
     )
   )
 )

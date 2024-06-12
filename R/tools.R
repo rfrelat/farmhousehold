@@ -235,7 +235,7 @@ simplifynames <- function(x, conv_name, warn=TRUE){
 #' @export
 
 conv_fun <- function(conv, x, other=NULL, cate=NULL,
-                     labother=c("other", "otherspecify"),
+                     labother=c("other", "otherspecify", "other_specify"),
                      warn=TRUE){
   if (!is.null(cate)){
     miss <- x[!as.character(x)%in%names(cate)]

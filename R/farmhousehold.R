@@ -108,12 +108,124 @@ print.farmhousehold <- function(x){
 #' # increase all price by 50%
 #' hhdb_rhomis$crop$income_lcu <- hhdb_rhomis$crop$income_lcu*1.5
 #' #update the summary
-#' hhdb_rhomis_highprice <- update.farmhousehold(hhdb_rhomis)
+#' hhdb_rhomis_highprice <- update_farmhousehold(hhdb_rhomis)
 #' median(hhdb_rhomis_highprice$hhinfo$crop_value_lcu/hhdb_rhomis$hhinfo$crop_value_lcu, na.rm=TRUE)
 #' @export
-update.farmhousehold <- function(x){
+update_farmhousehold <- function(x){
   newhhinfo <- calc_farm_prod(x$crop, x$lstk, x$lstk_prod, x$hhinfo,
                               x$conv_tlu, x$conv_energy)
   return(farmhousehold(x$crop, x$lstk, x$lstk_prod, newhhinfo,
                 x$conv_tlu, x$conv_energy))
+}
+
+
+#' Subset the household
+#'
+#' @param x farmhousehold object
+#' @param idlist vector with the hhid selected
+#' @examples
+#' data(hhdb_rhomis)
+#' # select household with livestock
+#' id <- sort(unique(hhdb_rhomis$lstk$hhid))
+#' lstkfarm <- select_farmhousehold(hhdb_rhomis, id)
+#' @export
+select_farmhousehold <- function(x, idlist){
+  stopifnot(sum(x$hhinfo$hhid%in%idlist)>0)
+  # select the household in hhinfo
+  x$hhinfo <- x$hhinfo[x$hhinfo$hhid%in%idlist,]
+  # the crop, lvst, and lvst table will be selected in farmhousehold()
+  return(farmhousehold(x$crop, x$lstk, x$lstk_prod, x$hhinfo,
+                       x$conv_tlu, x$conv_energy))
+}
+
+#' Export the household table information as csv
+#'
+#' @param x farmhousehold object
+#' @param file name of the output file
+#' @param path directory of the output file
+#' @examples
+#' data(hhdb_rhomis)
+#' # increase all price by 50%
+#' saveCSV_hhinfo(hhdb_rhomis, "rhomis_hhinfo")
+#' @export
+saveCSV_hhinfo <- function(x, file, path=NULL){
+  #add the extension if needed
+  if(!grepl("\\.csv$", file)){
+    file <- paste0(file, ".csv")
+  }
+  if(!is.null(path)){
+    if(!dir.exists(path)){
+      dir.create(path)
+    }
+    path <- ifelse(grepl("/$", path), dir, paste0(path, "/"))
+    file <- paste0(path, file)
+  }
+  write.csv(x$hhinfo, file = file, row.names = FALSE)
+}
+
+#' Export the farmhousehold information as four csv files
+#'
+#' @param x farmhousehold object
+#' @param name name of the dataset
+#' @param dir directory of the output file
+#' @examples
+#' data(hhdb_rhomis)
+#' saveCSV_farmhousehold(hhdb_rhomis, "rhomis")
+#' @export
+saveCSV_farmhousehold <- function(x, name, path=NULL){
+  # make sure to remove the extension, if any
+  if(grepl("\\.csv$", name)){
+    name <- gsub("\\.csv$", "", name)
+  }
+  if(!is.null(path)){
+    # make sure the directory exist, else create it
+    if(!dir.exists(path)){
+      dir.create(path)
+    }
+    path <- ifelse(grepl("/$", path), path, paste0(path, "/"))
+    name <- paste0(path, name)
+  }
+  # make sure the farmhousehold object is valid
+  x <- validate_farmhousehold(x)
+  # and updated
+  x <- update.farmhousehold(x)
+
+  write.csv(x$hhinfo, file = paste0(name, "_hhinfo.csv"),
+            row.names = FALSE)
+  write.csv(x$crop, file = paste0(name, "_crop.csv"),
+            row.names = FALSE)
+  write.csv(x$lstk, file = paste0(name, "_lstk.csv"),
+            row.names = FALSE)
+  write.csv(x$lstk_prod, file = paste0(name, "_lstkprod.csv"),
+            row.names = FALSE)
+}
+
+#' Export the farmhousehold information as rds files
+#'
+#' @param x farmhousehold object
+#' @param name name of the dataset
+#' @param dir directory of the output file
+#' @examples
+#' data(hhdb_rhomis)
+#' saveRDS_farmhousehold(hhdb_rhomis, "rhomis")
+#' @export
+saveRDS_farmhousehold <- function(x, name, path=NULL){
+  # make sure to remove the extension, if any
+  if(grepl("\\.rds$", name)){
+    name <- gsub("\\.rds$", "", name)
+  }
+  if(!is.null(path)){
+    # make sure the directory exist, else create it
+    if(!dir.exists(path)){
+      dir.create(path)
+    }
+    path <- ifelse(grepl("/$", path), path, paste0(path, "/"))
+    name <- paste0(path, name)
+  }
+  # make sure the farmhousehold object is valid
+  x <- validate_farmhousehold(x)
+  # and updated
+  x <- update.farmhousehold(x)
+  # save it in a rda file
+  save(x, file=name)
 }
