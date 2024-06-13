@@ -37,7 +37,7 @@ shinyUI(fluidPage(
            )
   ),
   tabPanel("Selection",
-          fluidRow(h4("5. Pareto ranking"),
+          fluidRow(h4("5. Pareto optimality"),
                    column(2,
                           selectInput('met', "Criteria",
                                       metChoices, selected="rank 1")
@@ -57,5 +57,6 @@ shinyUI(fluidPage(
                               column(10,plotOutput("boxvar")))
                      )
           )
-  )
+  ),
+  tabPanel("About", htmlOutput("renderedReport"))
 )))

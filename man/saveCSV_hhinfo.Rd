@@ -4,20 +4,19 @@
 \alias{saveCSV_hhinfo}
 \title{Export the household table information as csv}
 \usage{
-saveCSV_hhinfo(x, name, path = NULL)
+saveCSV_hhinfo(x, name, dirfile = NULL)
 }
 \arguments{
 \item{x}{farmhousehold object}
 
 \item{name}{name of the dataset}
 
-\item{path}{directory of the output file}
+\item{dirfile}{directory of the output file}
 }
 \description{
 Export the household table information as csv
 }
 \examples{
 data(hhdb_rhomis)
-# increase all price by 50\%
-saveCSV_hhinfo(hhdb_rhomis, "rhomis_hhinfo")
+# saveCSV_hhinfo(hhdb_rhomis, "rhomis_hhinfo")
 }

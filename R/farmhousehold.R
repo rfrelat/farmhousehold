@@ -145,8 +145,7 @@ select_farmhousehold <- function(x, idlist){
 #' @param dirfile directory of the output file
 #' @examples
 #' data(hhdb_rhomis)
-#' # increase all price by 50%
-#' saveCSV_hhinfo(hhdb_rhomis, "rhomis_hhinfo")
+#' # saveCSV_hhinfo(hhdb_rhomis, "rhomis_hhinfo")
 #' @export
 saveCSV_hhinfo <- function(x, name, dirfile=NULL){
   #add the extension if needed
@@ -170,7 +169,7 @@ saveCSV_hhinfo <- function(x, name, dirfile=NULL){
 #' @param dirfile directory of the output file
 #' @examples
 #' data(hhdb_rhomis)
-#' saveCSV_farmhousehold(hhdb_rhomis, "rhomis")
+#' # saveCSV_farmhousehold(hhdb_rhomis, "rhomis")
 #' @export
 saveCSV_farmhousehold <- function(x, name, dirfile=NULL){
   # make sure to remove the extension, if any
@@ -207,7 +206,7 @@ saveCSV_farmhousehold <- function(x, name, dirfile=NULL){
 #' @param dirfile directory of the output file
 #' @examples
 #' data(hhdb_rhomis)
-#' saveRDS_farmhousehold(hhdb_rhomis, "rhomis")
+#' # saveRDS_farmhousehold(hhdb_rhomis, "rhomis")
 #' @export
 saveRDS_farmhousehold <- function(x, name, dirfile=NULL){
   # make sure to remove the extension, if any

@@ -21,7 +21,9 @@ shinyUI(fluidPage(
                     column(9,
                      withSpinner(tmapOutput('tmapdata'), type=4),
                      h5("Locations are approximated to the nearest 0.01 degree and jittered to safeguard the privacy of households."),
-                     textOutput("nhh"))
+                     textOutput("nhh")),
+                     h2(),
+                     tags$a(href="https://github.com/rfrelat/farmhousehold/raw/main/inst/extdata/mini_rhomis.rds", "No data? Download here a test dataset")
                     )
     ),
     tabPanel("Crop",

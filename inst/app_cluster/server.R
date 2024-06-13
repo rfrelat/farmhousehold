@@ -77,8 +77,10 @@ shinyServer(function(input, output, session) {
       m <- apply(tabS, 2, median, na.rm=TRUE)
       iq <- apply(tabS, 2, IQR, na.rm=TRUE)
       maxout <- m+3*iq
-      vardif <- t(t(tabS)-maxout)
-      outlier <- apply(vardif>0,1,sum)>0
+      minout <- m-3*iq
+      maxdif <- t(t(tabS)-maxout)
+      mindif <- t(t(tabS)-minout)
+      outlier <- apply(maxdif>0,1,sum)>0 | apply(mindif<0,1,sum)>0
       tabS <- tabS[!outlier,]
     }
     return(tabS)
@@ -268,6 +270,6 @@ shinyServer(function(input, output, session) {
   )
 
   output$renderedReport <- renderUI({
-    includeHTML('Documentation.html')
+    includeHTML('About.html')
   })
 })

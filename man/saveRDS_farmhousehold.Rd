@@ -4,19 +4,19 @@
 \alias{saveRDS_farmhousehold}
 \title{Export the farmhousehold information as rds files}
 \usage{
-saveRDS_farmhousehold(x, name, path = NULL)
+saveRDS_farmhousehold(x, name, dirfile = NULL)
 }
 \arguments{
 \item{x}{farmhousehold object}
 
 \item{name}{name of the dataset}
 
-\item{path}{directory of the output file}
+\item{dirfile}{directory of the output file}
 }
 \description{
 Export the farmhousehold information as rds files
 }
 \examples{
 data(hhdb_rhomis)
-saveRDS_farmhousehold(hhdb_rhomis, "rhomis")
+# saveRDS_farmhousehold(hhdb_rhomis, "rhomis")
 }

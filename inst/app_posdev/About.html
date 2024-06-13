@@ -355,8 +355,7 @@ display: none;
 <p><em>by Romain Frelat, James Hammond, and Mark T. van Wijk</em><br />
 <em>This dashboard is part of the <a href="https://github.com/rfrelat/farmhousehold">farmhousehold</a>
 R-package</em></p>
-<p>The household typology (or cluster analysis) follows six successive
-steps:</p>
+<p>The positive deviant analysis follows six successive steps:</p>
 <div id="select-the-dataset" class="section level4">
 <h4><strong>1. Select the dataset</strong></h4>
 <p>You can load any csv file with households in row and variables in
@@ -367,10 +366,9 @@ data based on geographic variables.</p>
 </div>
 <div id="select-variables" class="section level4">
 <h4><strong>2. Select variables</strong></h4>
-<p>By default, the key variables from <code>farmhousehold</code> can be
-selected. Make sure to select enough variables to represent the
-diversity of farm households; but check the distribution and correlation
-among variables (see step 4).</p>
+<p>By default, only numeric variables can be selected. Select which
+variables should be maximized and minimized by the pareto optimality
+algorithm.</p>
 </div>
 <div id="outliers" class="section level4">
 <h4><strong>3. Outliers</strong></h4>
@@ -380,7 +378,7 @@ variables.</p>
 <li><p>log transformation will log(x+1) all variables with a skewness
 higher than 5.</p></li>
 <li><p>exclusion of outliers will remove all households that have values
-higher than <span class="math inline">\(median +3 * iqr\)</span>
+higher than the <span class="math inline">\(median +3 * iqr\)</span>
 (interquartile range) or lower than <span class="math inline">\(median
 -3 * iqr\)</span>.</p></li>
 </ul>
@@ -394,43 +392,64 @@ outliers.</p>
 <h4><strong>4. Explore data</strong></h4>
 <p>The visualization of the data will help you select variables and deal
 with outliers. Variables should be Gaussian-like, and not too correlated
-among each other. Be aware that large outliers might drive the
-subsequent multivariate analysis.</p>
+among each other.</p>
 </div>
-<div id="multivariate-analysis" class="section level4">
-<h4><strong>5. Multivariate analysis</strong></h4>
-<p>Select the number of principal components that successfully summarize
-the diversity of your dataset. At this step, it is a good idea to check
-that no geographic pattern hides in your dataset. If you find strong
-differences among regions, you might want to run separate clustering
-analysis per region.</p>
-</div>
-<div id="cluster-analysis" class="section level4">
-<h4><strong>6. Cluster analysis</strong></h4>
-<p>You can select between hierarchical clustering and k-means
-algorithms.</p>
+<div id="pareto-optimality" class="section level4">
+<h4><strong>5. Pareto optimality</strong></h4>
+<p>The pareto rank is calculated with the function eaf::pareto_rank()
+that use genetic algorithm: NSGA-II (<em>Deb et al. 2002</em>).</p>
+<p>To select positive deviants, there are three options.</p>
 <ul>
-<li><p>Hierarchical clustering uses the euclidean distances between the
-households in the PC space and agglomerates households based on Ward’s
-criterion. The height of the diverging branches in the hierarchical tree
-is plotted to help you select the optimum number of clusters.</p></li>
-<li><p>K-mean method uses the algorithm of Hartigan and Wong 1979. The
-plot shows the within-cluster sum of squares per number of clusters to
-help you select the optimum number of clusters.</p></li>
+<li><strong>rank 1</strong>: non-dominated households (= Pareto rank 1),
+as in <em>Modernel et al. 2018</em> or <em>Liang et al. 2022</em>.<br />
+</li>
+<li><strong>rank 1 &amp; better</strong>: household Pareto rank 1 AND
+all variables better than the population median, as in <em>Adelhart
+Toorop et al. 2020</em>.</li>
+<li><strong>rank 3 &amp; better</strong>: household Pareto rank higher
+or equal to 3 AND all variables better than the population median as in
+<em>Shija et al. 2022, World</em></li>
+<li><strong>rank 2 &amp; better 2</strong>: household Pareto rank 1 and
+2 AND almost all variables better than the population median, a
+intermediate between the two previous selection</li>
 </ul>
-<p>Ideally, the clustering will not change significantly between the two
-methods (but group labeling will change).</p>
+</div>
+<div id="vizualisation" class="section level4">
+<h4><strong>6. Vizualisation</strong></h4>
+<p>The positive deviants can be visually compared on a multivariate
+space made of the two first principal components from a principal
+component analysis. The distribution of the selected variables is shown
+with boxplot.</p>
 </div>
 <div id="references" class="section level3">
 <h3>References</h3>
-<p>Hartigan, J. A. and Wong, M. A. (1979). Algorithm AS 136: A K-means
-clustering algorithm. Applied Statistics, 28, 100–108.</p>
-<p>Murtagh, Fionn and Legendre, Pierre (2014). Ward’s hierarchical
-agglomerative clustering method: which algorithms implement Ward’s
-criterion? Journal of Classification, 31, 274–295.</p>
-<p>Ward Jr, J. H. (1963). Hierarchical grouping to optimize an objective
-function. Journal of the American statistical association, 58(301),
-236-244.</p>
+<p>Kalyanmoy Deb, A Pratap, S Agarwal, T Meyarivan (2002). “A fast and
+elitist multi-objective genetic algorithm: NSGA-II.” IEEE Transactions
+on Evolutionary Computation, 6(2), 182–197. doi 10.1109/4235.996017</p>
+<p>Liang, Z., van der Werf, W., Xu, Z., Cheng, J., Wang, C., Cong, W.
+F., … &amp; Groot, J. C. (2022). Identifying exemplary sustainable
+cropping systems using a positive deviance approach: Wheat-maize double
+cropping in the North China Plain. Agricultural Systems, 201, 103471.
+doi 10.1016/j.agsy.2022.103471</p>
+<p>Modernel, Pablo, et al. “Identification of beef production farms in
+the Pampas and Campos area that stand out in economic and environmental
+performance.” Ecological Indicators 89 (2018): 755-770. doi:
+10.1016/j.ecolind.2018.01.038</p>
+<p>Shija, D. S., Mwai, O. A., Migwi, P. K., Komwihangilo, D. M., &amp;
+Bebe, B. O. (2022). Identifying positive deviant farms using
+Pareto-Optimality ranking technique to assess productivity and
+livelihood benefits in smallholder dairy farming under contrasting
+stressful environments in Tanzania. World, 3(3), 639-656. doi
+10.3390/world3030035</p>
+<p>Steinke, J., Mgimiloko, M. G., Graef, F., Hammond, J., van Wijk, M.
+T., &amp; van Etten, J. (2019). Prioritizing options for multi-objective
+agricultural development through the positive deviance approach. PLoS
+One, 14(2), e0212926. doi: 10.1371/journal.pone.0212926</p>
+<p>Toorop, R. A., Ceccarelli, V., Bijarniya, D., Jat, M. L., Jat, R. K.,
+Lopez-Ridaura, S., &amp; Groot, J. C. (2020). Using a positive deviance
+approach to inform farming systems redesign: A case study from Bihar,
+India. Agricultural Systems, 185, 102942. doi:
+10.1016/j.agsy.2020.102942</p>
 </div>
 
 

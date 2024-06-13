@@ -266,7 +266,8 @@ conv_fun <- function(conv, x, other=NULL, cate=NULL,
 
 #' Correlation plot for pairs
 #'
-#' @param x, y numeric vectors
+#' @param x numeric vector
+#' @param y numeric vector
 #' @param digits precision of the correlation
 #' @param method correlation method ("pearson" (default), "kendall", or "spearman")
 #' @return plot with the correlation coefficient

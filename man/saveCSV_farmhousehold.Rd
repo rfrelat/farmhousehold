@@ -4,19 +4,19 @@
 \alias{saveCSV_farmhousehold}
 \title{Export the farmhousehold information as four csv files}
 \usage{
-saveCSV_farmhousehold(x, name, path = NULL)
+saveCSV_farmhousehold(x, name, dirfile = NULL)
 }
 \arguments{
 \item{x}{farmhousehold object}
 
 \item{name}{name of the dataset}
 
-\item{path}{directory of the output file}
+\item{dirfile}{directory of the output file}
 }
 \description{
 Export the farmhousehold information as four csv files
 }
 \examples{
 data(hhdb_rhomis)
-saveCSV_farmhousehold(hhdb_rhomis, "rhomis")
+# saveCSV_farmhousehold(hhdb_rhomis, "rhomis")
 }
