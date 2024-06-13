@@ -8,4 +8,4 @@ importFrom("graphics", "axis", "barplot", "boxplot", "legend", "par",
                 "pie", "polygon", "strwidth", "text")
 importFrom("stats", "complete.cases", "cor", "cor.test", "density",
            "median", "quantile", "symnum")
-importFrom("utils", "data")
+importFrom("utils", "data", "write.csv")

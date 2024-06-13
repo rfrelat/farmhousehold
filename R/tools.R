@@ -263,6 +263,14 @@ conv_fun <- function(conv, x, other=NULL, cate=NULL,
   return(y)
 }
 
+
+#' Correlation plot for pairs
+#'
+#' @param x, y numeric vectors
+#' @param digits precision of the correlation
+#' @param method correlation method ("pearson" (default), "kendall", or "spearman")
+#' @return plot with the correlation coefficient
+#' @export
 panel.cor.m <- function(x, y, digits=2, method="pearson")
 {
   usr <- par("usr"); on.exit(par("usr"=usr))
@@ -279,14 +287,3 @@ panel.cor.m <- function(x, y, digits=2, method="pearson")
   text(0.5, 0.5, txt, cex = cex * r2)
   text(.8, .8, Signif, cex=cex, col=2)
 }
-
-
-
-# Count_Unique <- function(x){
-#   x <- x[!is.na(x)]
-#   x <- x[x!="NA"]
-#   return(length(unique(x)))
-# }
-
-
-

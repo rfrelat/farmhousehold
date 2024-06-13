@@ -9,7 +9,7 @@ conv_fun(
   x,
   other = NULL,
   cate = NULL,
-  labother = c("other", "otherspecify"),
+  labother = c("other", "otherspecify", "other_specify"),
   warn = TRUE
 )
 }

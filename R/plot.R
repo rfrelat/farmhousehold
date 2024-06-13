@@ -405,9 +405,10 @@ bar_score <- function(tab, score="HDDS", pal= NULL, marx=6, rm0=FALSE,
   col <- names(tab)[grep(paste0(score, "_"), names(tab), ignore.case = TRUE)]
   #but not the score itself
   col <- col[-grep("_score$", col, ignore.case = TRUE)]
-  #nor season
-  col <- col[-grep("_season$", col, ignore.case = TRUE)]
-  col <- col[-grep("_month$", col, ignore.case = TRUE)]
+  # and not season nor month
+  col <- col[grep("_season$", col, ignore.case = TRUE, invert=TRUE)]
+  col <- col[grep("_month$", col, ignore.case = TRUE, invert=TRUE)]
+
   if(length(col)== 0){
     stop("Can not find the columns of the score")
   }
@@ -796,45 +797,6 @@ plot_density <- function(x, th, lab="", corskew=TRUE, pal=c("red", "blue")){
     axis(1, at = xax, labels = round(xax**(4)))
   } else {
     axis(1)
-  }
-}
-
-#' Show the pie chart of the number of households per group
-#'
-#' This function show the threshold of a numeric variable
-#' @param x the vector containing the groups
-#' @param interplot decide if the plot is interactive (with plotly) or not
-#' @keywords pie
-#' @export
-#' @examples
-#' data(hhdb_rhomis)
-#'
-#' #plot the source of income
-#' pie_seg(hhdb_rhomis$hhinfo$large_region)
-#'
-#'
-pie_seg <- function(x, interplot=FALSE){
-  df <- data.frame(table(x, useNA="ifany"))
-  df$x <- as.character(df$x)
-  df$x[is.na(df$x)] <- "NA"
-  df$Perc <- df$Freq/sum(df$Freq)
-  df$text <- paste(df$x, "<br>n=", df$Freq, "<br>", round(df$Perc*100,1), "%")
-
-  if(!interplot){
-    pie(df$Freq, labels = df$x)
-    invisible(df)
-  } else {
-    p1 <- plot_ly(df, labels = ~x, values = ~Freq,
-                  type = 'pie',
-                  textposition = 'inside',
-                  textinfo = 'label+percent',
-                  direction ='clockwise', sort=FALSE,
-                  hoverinfo = 'text',
-                  text = ~text) %>%
-      layout(title = 'Segmentation') %>%
-      config(modeBarButtons = list(list("toImage")),
-             displaylogo = FALSE)
-    return(p1)
   }
 }
 

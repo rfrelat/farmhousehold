@@ -24,7 +24,7 @@ shinyUI(fluidPage(
                            selectInput('select', 'Options', varChoices,
                                 multiple=TRUE, selectize=TRUE, selected = varDefault)),
                     column(6,
-                           h4("3. Scale variables"),
+                           h4("3. Outliers"),
                            checkboxInput('log', "Log-transform the right skewed variables", value = TRUE),
                            checkboxInput('out', "Remove outliers", value = FALSE))),
            fluidRow(htmlOutput("nvar")),
@@ -40,8 +40,7 @@ shinyUI(fluidPage(
   tabPanel("Analysis",
            fluidRow(h4("5. Multivariate analysis"),
                     column(2,
-                           sliderInput("npc", label = "Number of PC",
-                                       min = 2, max = 10, value = 3, step = 1),
+                           uiOutput('pcaxis'),
                            uiOutput('xaxis'),
                            uiOutput('yaxis'),
                            uiOutput('grp')
@@ -61,14 +60,15 @@ shinyUI(fluidPage(
                     ),
                     column(5, plotOutput("numclu")),
                     column(5, plotOutput("boxvar"))),
-
+           fluidRow(textOutput("cluinfo")),
            # export data and script
            fluidRow(
              column(4),
-             column(8, downloadButton("dwldlData", "Download Data"),
-                    downloadButton("dwldlScript", "Download Script"))
+             column(8, downloadButton("dwldlScript", "Download Script"))
            )
 
-  )
+  ),
+
+  tabPanel("About", htmlOutput("renderedReport"))
 
 )))

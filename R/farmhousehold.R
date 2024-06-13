@@ -141,54 +141,54 @@ select_farmhousehold <- function(x, idlist){
 #' Export the household table information as csv
 #'
 #' @param x farmhousehold object
-#' @param file name of the output file
-#' @param path directory of the output file
+#' @param name name of the dataset
+#' @param dirfile directory of the output file
 #' @examples
 #' data(hhdb_rhomis)
 #' # increase all price by 50%
 #' saveCSV_hhinfo(hhdb_rhomis, "rhomis_hhinfo")
 #' @export
-saveCSV_hhinfo <- function(x, file, path=NULL){
+saveCSV_hhinfo <- function(x, name, dirfile=NULL){
   #add the extension if needed
-  if(!grepl("\\.csv$", file)){
-    file <- paste0(file, ".csv")
+  if(!grepl("\\.csv$", name)){
+    name <- paste0(name, ".csv")
   }
-  if(!is.null(path)){
-    if(!dir.exists(path)){
-      dir.create(path)
+  if(!is.null(dirfile)){
+    if(!dir.exists(dirfile)){
+      dir.create(dirfile)
     }
-    path <- ifelse(grepl("/$", path), dir, paste0(path, "/"))
-    file <- paste0(path, file)
+    dirfile <- ifelse(grepl("/$", dirfile), dirfile, paste0(dirfile, "/"))
+    name <- paste0(dirfile, name)
   }
-  write.csv(x$hhinfo, file = file, row.names = FALSE)
+  write.csv(x$hhinfo, file = name, row.names = FALSE)
 }
 
 #' Export the farmhousehold information as four csv files
 #'
 #' @param x farmhousehold object
 #' @param name name of the dataset
-#' @param dir directory of the output file
+#' @param dirfile directory of the output file
 #' @examples
 #' data(hhdb_rhomis)
 #' saveCSV_farmhousehold(hhdb_rhomis, "rhomis")
 #' @export
-saveCSV_farmhousehold <- function(x, name, path=NULL){
+saveCSV_farmhousehold <- function(x, name, dirfile=NULL){
   # make sure to remove the extension, if any
   if(grepl("\\.csv$", name)){
     name <- gsub("\\.csv$", "", name)
   }
-  if(!is.null(path)){
+  if(!is.null(dirfile)){
     # make sure the directory exist, else create it
-    if(!dir.exists(path)){
-      dir.create(path)
+    if(!dir.exists(dirfile)){
+      dir.create(dirfile)
     }
-    path <- ifelse(grepl("/$", path), path, paste0(path, "/"))
-    name <- paste0(path, name)
+    dirfile <- ifelse(grepl("/$", dirfile), dirfile, paste0(dirfile, "/"))
+    name <- paste0(dirfile, name)
   }
   # make sure the farmhousehold object is valid
   x <- validate_farmhousehold(x)
   # and updated
-  x <- update.farmhousehold(x)
+  x <- update_farmhousehold(x)
 
   write.csv(x$hhinfo, file = paste0(name, "_hhinfo.csv"),
             row.names = FALSE)
@@ -204,28 +204,28 @@ saveCSV_farmhousehold <- function(x, name, path=NULL){
 #'
 #' @param x farmhousehold object
 #' @param name name of the dataset
-#' @param dir directory of the output file
+#' @param dirfile directory of the output file
 #' @examples
 #' data(hhdb_rhomis)
 #' saveRDS_farmhousehold(hhdb_rhomis, "rhomis")
 #' @export
-saveRDS_farmhousehold <- function(x, name, path=NULL){
+saveRDS_farmhousehold <- function(x, name, dirfile=NULL){
   # make sure to remove the extension, if any
   if(grepl("\\.rds$", name)){
     name <- gsub("\\.rds$", "", name)
   }
-  if(!is.null(path)){
+  if(!is.null(dirfile)){
     # make sure the directory exist, else create it
-    if(!dir.exists(path)){
-      dir.create(path)
+    if(!dir.exists(dirfile)){
+      dir.create(dirfile)
     }
-    path <- ifelse(grepl("/$", path), path, paste0(path, "/"))
-    name <- paste0(path, name)
+    dirfile <- ifelse(grepl("/$", dirfile), dirfile, paste0(dirfile, "/"))
+    name <- paste0(dirfile, name)
   }
   # make sure the farmhousehold object is valid
   x <- validate_farmhousehold(x)
   # and updated
-  x <- update.farmhousehold(x)
+  x <- update_farmhousehold(x)
   # save it in a rda file
   save(x, file=name)
 }

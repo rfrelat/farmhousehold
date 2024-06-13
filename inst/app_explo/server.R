@@ -129,9 +129,9 @@ shinyServer(function(input, output, session) {
   output$popcrop <- renderPlotly({
     if (input$segcrop){
       bar_div(cropInput(), segInput()$hhid, interplot = TRUE,
-              seg = segInput()$segmentation)
+              seg = segInput()$segmentation, th = 20)
     } else {
-      bar_div(cropInput(), hhInput()$hhid, interplot = TRUE)
+      bar_div(cropInput(), hhInput()$hhid, interplot = TRUE, th=20)
     }
   })
 
@@ -272,6 +272,9 @@ shinyServer(function(input, output, session) {
       x1 <- hhInput()[,input$var1]
       q1 <- round(quantile(x1,
                            probs=c(0.1, 0.5, 0.9), na.rm=TRUE),1)
+      if(lunique(q1)==1){
+          q1 <- c(min(x1), q1[2], max(x1))
+      }
       sliderInput('thvar1', "Threshold",
                   min = q1[1], max = q1[3],
                   value = q1[2], step=diff(range(q1))/20)
@@ -295,6 +298,9 @@ shinyServer(function(input, output, session) {
       x2 <- hhInput()[,input$var2]
       q2 <- round(quantile(x2,
                            probs=c(0.1, 0.5, 0.9), na.rm=TRUE),1)
+      if(lunique(q2)==1){
+        q2 <- c(min(x2), q2[2], max(x2))
+      }
       sliderInput('thvar2', "Threshold",
                   min = q2[1], max = q2[3],
                   value = q2[2], step=diff(range(q2))/10)
@@ -318,7 +324,9 @@ shinyServer(function(input, output, session) {
       x3 <- hhInput()[,input$var3]
       q3 <- round(quantile(x3,
                            probs=c(0.1, 0.5, 0.9), na.rm=TRUE), 1)
-
+      if(lunique(q3)==1){
+        q3 <- c(min(x3), q3[2], max(x3))
+      }
       sliderInput('thvar3', "Threshold",
                   min = q3[1], max = q3[3],
                   value = q3[2], step=diff(range(q3))/10)

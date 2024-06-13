@@ -123,6 +123,12 @@ shinyServer(function(input, output, session) {
   })
 
   # 5 Multivariate ------------------------------
+  output$pcaxis <- renderUI({
+    sliderInput("npc", label = "Number of PC",
+                min = 2, max = max(c(length(input$select)-1, 3)),
+                value = 3, step = 1)
+  })
+
   output$xaxis <- renderUI({
     scale <- paste0("PC", 1:input$npc)
     selectInput('xpc', "x-axis", scale, selected="PC1")
@@ -163,7 +169,8 @@ shinyServer(function(input, output, session) {
               xax = as.numeric(gsub("PC","",input$xpc)),
               yax = as.numeric(gsub("PC","",input$ypc)))
     } else {
-      s.class(pcaInput()$li, fac = cluInput()[,input$fac],
+      pal <- pals::brewer.set1(max(c(nlevels(cluInput()[,input$fac]), 3)))
+      s.class(pcaInput()$li, fac = cluInput()[,input$fac], col = pal,
               xax = as.numeric(gsub("PC","",input$xpc)),
               yax = as.numeric(gsub("PC","",input$ypc)))
     }
@@ -230,15 +237,25 @@ shinyServer(function(input, output, session) {
             ylab=input$varY, xlab="cluster")
   })
 
-  # 7 Download ------------------------
-  output$dwldlData <- downloadHandler(
-    filename = function() {
-      "Household_Data.csv"
-    },
-    content = function(file) {
-      write.csv(hhInput(), file, row.names = TRUE)
+  output$cluinfo <- renderText({
+    n <- table(cluInput()$cluster)
+    perc <- round(n/sum(n)*100)
+    txt <- "Number of household per group: "
+    for (i in 1:length(n)){
+      txt <- paste0(txt, "N", names(n)[i], "=", n[i], "(", perc[i], "%); ")
     }
-  )
+    return(txt)
+  })
+
+  # 7 Download ------------------------
+  # output$dwldlData <- downloadHandler(
+  #   filename = function() {
+  #     "Household_Data.csv"
+  #   },
+  #   content = function(file) {
+  #     write.csv(hhInput(), file, row.names = TRUE)
+  #   }
+  # )
 
   output$dwldlScript <- downloadHandler(
     filename = function() {
@@ -249,4 +266,8 @@ shinyServer(function(input, output, session) {
     },
     contentType = "application/zip"
   )
+
+  output$renderedReport <- renderUI({
+    includeHTML('Documentation.html')
+  })
 })
