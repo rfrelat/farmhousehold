@@ -5,7 +5,7 @@ account: startistic
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 12178963
-bundleId:
+bundleId: 8739421
 url: https://startistic.shinyapps.io/farmhousehold_posdev/
 version: 1
 asMultiple: FALSE

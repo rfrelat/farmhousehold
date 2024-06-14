@@ -6,10 +6,7 @@
 \title{RHoMIS dataset}
 \format{
 \describe{
-  \item{hhinfo}{Household information}
-  \item{crop}{Crop production}
-  \item{lstk}{Livestock herd}
-  \item{lstk_prod}{Production from livestock}
+  \item{hhdb_rhomis}{a farmhousehold object}
 }
 }
 \source{
@@ -19,9 +16,9 @@
 hhdb_rhomis
 }
 \description{
-A dataset containing household information from RHoMIS dataset
+A sample dataset containing household information from RHoMIS dataset
 }
 \references{
-Van Wijk et al.
+van Wijk, M., Hammond, J., Gorman, L., Adams, S., Ayantunde, A., Baines, D., ... & Yameogo, V. (2020). The Rural Household Multiple Indicator Survey, data from 13,310 farm households in 21 countries. Scientific Data, 7(1), 46.
 }
 \keyword{datasets}

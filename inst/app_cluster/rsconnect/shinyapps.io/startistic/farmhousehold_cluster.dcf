@@ -1,0 +1,13 @@
+name: farmhousehold_cluster
+title: farmhousehold_cluster
+username: startistic
+account: startistic
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12179095
+bundleId: 8739466
+url: https://startistic.shinyapps.io/farmhousehold_cluster/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: About.md

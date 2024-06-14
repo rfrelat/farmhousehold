@@ -23,6 +23,7 @@ shinyUI(fluidPage(
                      h5("Locations are approximated to the nearest 0.01 degree and jittered to safeguard the privacy of households."),
                      textOutput("nhh")),
                      h2(),
+                     h5("This dashboard is part of the farmhousehold R-package, by Romain Frelat, James Hammond, and Mark T. van Wijk"),
                      tags$a(href="https://github.com/rfrelat/farmhousehold/raw/main/inst/extdata/mini_rhomis.rds", "No data? Download here a test dataset")
                     )
     ),

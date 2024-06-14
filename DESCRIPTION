@@ -1,6 +1,6 @@
 Package: farmhousehold
 Type: Package
-Title: Farm Household Data Platform
+Title: household data platform for mixed farm system analysis
 Version: 0.1.0
 Author: Romain Frelat, James Hammond, Mark T. van Wijk
 Maintainer: Romain Frelat <rom.frelat@gmail.com>

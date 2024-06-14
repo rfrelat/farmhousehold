@@ -107,6 +107,6 @@ hhdb_xx <- farmhousehold(
   "conv_energy"=conv_energy
 )
 
-# save it in a rda file
-save(hhdb_xx,
-     file="hhdb_xx.rda")
+# save it in a rds file
+saveRDS(hhdb_xx,
+     file="hhdb_xx.rds")

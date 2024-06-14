@@ -21,7 +21,11 @@ shinyServer(function(input, output, session) {
                       choices = sc1)
 
     if (sum(varChoices %in% names(hhinfo))<10){
-      vc1 <- names(hhinfo)
+      # vc1 <- names(hhinfo)
+      # select only numeric variables
+      sel <- unlist(lapply(hhinfo, is.numeric))
+      # and with some variance
+      vc1 <- names(sel)[sel][apply(hhinfo[,sel],2,sd, na.rm=TRUE)>0.00001]
       sl1 <- vc1[2:min(c(5, length(vc1)))]
     } else {
       vc1 <- varChoices[varChoices%in%names(hhinfo)]

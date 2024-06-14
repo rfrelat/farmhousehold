@@ -1,0 +1,12 @@
+name: farmhousehold_explo
+title: farmhousehold_explo
+username: startistic
+account: startistic
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12179198
+bundleId: 8739552
+url: https://startistic.shinyapps.io/farmhousehold_explo/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
