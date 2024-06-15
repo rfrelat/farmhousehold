@@ -73,16 +73,17 @@ farmhousehold <- function(crop, lstk, lstk_prod, hhinfo, conv_tlu, conv_energy) 
   conv_tlu <- conv_tlu[names(conv_tlu)%in%lstk$name]
   conv_energy <- conv_energy[names(conv_energy)%in%crop$name | names(conv_energy)%in%lstk_prod$prod]
 
-  #create the S3 object and validate it
+  #create the S3 object, validate and update it
   x <- new_farmhousehold(crop, lstk, lstk_prod, hhinfo, conv_tlu, conv_energy)
   x <- validate_farmhousehold(x)
+  x <- update_farmhousehold(x)
   return(x)
 }
 
 #' Print short summary of the farmhousehold data
 #'
 #' @param x farmhousehold object
-#' @export
+#' @exportS3Method print
 print.farmhousehold <- function(x){
   cat("Farm household dataset\n")
   cat("With", nrow(x$hhinfo), "households in", lunique(x$hhinfo$country), "different countries\n\n")
