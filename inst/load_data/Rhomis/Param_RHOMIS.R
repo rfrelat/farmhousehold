@@ -1,12 +1,14 @@
-library(farmhousehold)
+# Parameters for transforming RHOMIS dataset in farmhousehold format
+# Last update: 27/05/2024
 
-tlu <- read.csv("../Parameters/lstk_param.csv", sep=";")
+library(farmhousehold) # for cleanname
+tlu <- read.csv("../Data/Parameters/lstk_param.csv", sep=";")
 conv_tlu <- as.numeric(tlu$TLU_Conversion)
 names(conv_tlu) <- cleanname(tlu$Animal)
 
 
 # Missing crop energy conversion: hop, pyrethrum, rough_pea
-crop <- read.csv("../Parameters/crop_param.csv")
+crop <- read.csv("../Data/Parameters/crop_param.csv")
 conv_energy <- as.numeric(crop$energy)
 names(conv_energy) <- crop$crop
 
@@ -99,6 +101,7 @@ large <- c(
   "nigeria"="Western Africa",
   "palestine"="Middle East",
   "peru"="Latin America",
+  "philipines"="South+East Asia",
   "rwanda"="Eastern Africa",
   "senegal"="Western Africa",
   "sierra leone"="Western Africa",

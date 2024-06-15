@@ -91,12 +91,6 @@ lstk$name <- bestname(lstk$name, names(conv_tlu), warn = TRUE)
 lstk_prod$name <- bestname(lstk_prod$name, names(conv_tlu), warn = TRUE)
 lstk_prod$prod <- bestname(lstk_prod$prod, names(conv_energy), warn = TRUE)
 
-# calculate crop and livestock summary characteristics
-hhinfo <- calc_farm_prod(crop, lstk, lstk_prod, hhinfo, conv_tlu, conv_energy)
-
-# this step could contain some data validity checks and deleting outliers
-
-# 8. Save dataset -------------------------------
 # create a farmhousehold object
 hhdb_xx <- farmhousehold(
   "crop"=crop, 
@@ -106,6 +100,13 @@ hhdb_xx <- farmhousehold(
   "conv_tlu"=conv_tlu, 
   "conv_energy"=conv_energy
 )
+
+# calculate crop and livestock characteristics
+hhdb_xx<- update_farmhousehold(hhdb_xx)
+
+# this step could also contain some data validity checks and deleting outliers
+
+# 8. Save dataset -------------------------------
 
 # save it in a rds file
 saveRDS(hhdb_xx,

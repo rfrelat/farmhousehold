@@ -9,10 +9,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-source("Param_RHOMIS.R")
-conv_F <- c(0.5, 0.75, 0.75, 0.86, 0.6) #female
-conv_M <- c(0.5, 0.75, 0.925, 1, 0.73) #male
-load("../Data/Processed/HHDB_RHOMIS_27052024.rda")
 ```
 
 ## Objectives
@@ -80,7 +76,7 @@ The initial household information table should contain information on household 
 | head_gender | gender of the household head | 'f' or 'm' |
 | off_farm_lcu | off farm income per year    | lcu      |
 | off_farm_div | diversity of off farm activities   |       |
-| currency_conversion_lcu_to_ppp | conversion from     | lcu/usd        |
+| currency_conversion | conversion from local currency to power parity purchase usd    | lcu/usd        |
 | hdds | household diet diversity score based on 10 groups    |       |
 | fies | Food Insecurity Experience Scale based on 8 questions   |       |
 | foodshortage_count | number of months with food shortage    |       |
@@ -130,9 +126,12 @@ To run the calculation you need the energy conversion (`conv_energy`) for all cr
 
 ## GIS information
 
-If interested, you can extract spatial information based on the GPS coordinates of households. Here are a list of spatial raster with relevant information, you can find more spatial data in the [geodata package](https://github.com/rspatial/geodata).   
-- the Dixon farming system classification for Sub-Saharan Africa [Dixon et al. 2021](https://www.routledge.com/Farming-Systems-and-Food-Security-in-Africa-Priorities-for-Science-and-Policy-Under-Global-Change/Dixon-Garrity-Boffa-Williams-Amede-Auricht-Lott-Mburathi/p/book/9781032082141)
-- the population density estimated by the [Gridded Population of the World (GPWv4)](https://sedac.ciesin.columbia.edu/data/collection/gpw-v4/documentation)   
-- the travel time to cities estimated by [Nelson et al. 2019](https://www.nature.com/articles/s41597-019-0265-5) 
+If interested, you can extract spatial information based on the GPS coordinates of households. Here are a list of spatial raster with relevant information, you can find more spatial data in the [geodata package](https://github.com/rspatial/geodata).  
+
+- the Dixon farming system classification for Sub-Saharan Africa [Dixon et al. 2021](https://www.routledge.com/Farming-Systems-and-Food-Security-in-Africa-Priorities-for-Science-and-Policy-Under-Global-Change/Dixon-Garrity-Boffa-Williams-Amede-Auricht-Lott-Mburathi/p/book/9781032082141)  
+- the population density estimated by the [Gridded Population of the World (GPWv4)](https://sedac.ciesin.columbia.edu/data/collection/gpw-v4/documentation)    
+- the travel time to cities estimated by [Nelson et al. 2019](https://www.nature.com/articles/s41597-019-0265-5)   
 - the Koeppen's Climate Classification from:  
-Beck, H.E., et al. (2018) "Present and future Köppen-Geiger climate classification maps at 1-km resolution", *Nature Scientific Data*, 5, 180214 [DOI 10.1038/sdata.2018.214](https://doi.org/10.1038/sdata.2018.214)
+Beck, H.E., et al. (2018) "Present and future Köppen-Geiger climate classification maps at 1-km resolution", *Nature Scientific Data*, 5, 180214 [DOI 10.1038/sdata.2018.214](https://doi.org/10.1038/sdata.2018.214)  
+
+

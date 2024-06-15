@@ -1,7 +1,7 @@
 ---
-title: "Documentation RHoMIS dataset"
+title: "Documentation on RHoMIS dataset"
 author: "Romain Frelat"
-date: "2023-11-31"
+date: "27-05-2024"
 output:
   pdf_document: default
   word_document: default
@@ -9,15 +9,16 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-source("Param_RHOMIS_2023.R")
+source("Param_RHOMIS.R")
 conv_F <- c(0.5, 0.75, 0.75, 0.86, 0.6) #female
 conv_M <- c(0.5, 0.75, 0.925, 1, 0.73) #male
-load("../Data/Processed/HHDB_RHOMIS_25092023.rda")
+hhdb_rhomis <- readRDS("../Data/Processed/HHDB_RHOMIS_27052024.rds")
 ```
 
 ## Objectives
 
-This document records the steps and choices made to transform the RHoMIS dataset into the format of the Household Data Platform. It goes together and complements the script file `Get_RHOMIS_2023.R`. **The original dataset will be published soon (add url)**.
+This document records the steps and choices made to transform the RHoMIS dataset into the format of the [farmhousehold Data Platform](https://github.com/rfrelat/farmhousehold). It goes together and complements the script file `Get_RHOMIS.R`. The original dataset is an updated version of:   
+van Wijk, M., Hammond, J., Gorman, L., Adams, S., Ayantunde, A., Baines, D., ... & Yameogo, V. (2020). The Rural Household Multiple Indicator Survey, data from 13,310 farm households in 21 countries. Scientific Data, 7(1), 46.
 
 
 ## Crop table
@@ -33,18 +34,18 @@ The crop table contains 8 columns with information on crop cultivation and usage
 | consumed_kg | amount consumed     | kg       |
 | sold_kg | amount sold             | kg       |
 | income_lcu | income from sells    | lcu      |
-| use_list | list all usages        | categories |
 
 
+### Land area
+The land cultivated area was transformed into hectare with the [rhomis package](https://github.com/RHoMIS/rhomis-R-package).  
 
-#### Land area
-The land cultivated area was transformed into hectare with the *rhomis* package.  
-
-We estimated the land area per crop from the reported proportion of land cultivated per crop (6 categories: all 90%, most 70%, half 50%, underhalf 20%, little 10%, none 0%). We corrected these percentages when necessary to make sure that the sum of the crop areas was equal to the area of land cultivated (sum of the proportions=100%). 
+We estimated the land area per crop from the reported proportion of land cultivated per crop (6 categories: all=90%, most=70%, half=50%, underhalf=20%, little=10%, none=0%). We corrected these percentages when necessary to make sure that the sum of the crop areas was equal to the area of land cultivated (sum of the proportions=100%). 
 
 For households without proportions per crop, we assumed that the proportion of crop area is equal to the proportion of quantities harvested.
 
 
+### Crop diversity
+We recorded all crops cultivated by farmers. When crops were only listed as grown, without any information on production or usage (not considered as a main crop), we only recorded the hhid and the name in the table, all other columns were filled with NA.
 
 
 \newpage
@@ -60,10 +61,9 @@ The livestock table contains 3 columns with information on livestock herd
 
 
 The livestock are in 16 categories:
-bees, buffalo, camel, cattle, chicken, dogs, donkeys_horses, duck, fish,            goats, guinea_pigs, otherpoultry, oxen (**?**), pigs, rabbits, sheep.   
+bees, buffalo, camel, cattle, chicken, dogs, donkeys_horses, duck, fish, goats, guinea_pigs, otherpoultry, oxen, pigs, rabbits, sheep.   
 
   
-
 ## Livestock production table
 The livestock production table contains 7 columns with information on livestock productions:  
 
@@ -77,16 +77,18 @@ The livestock production table contains 7 columns with information on livestock 
 | sold_kg | amount sold             | kg       |
 | income_lcu | income from sells    | lcu      |
 
-We consider meat, milk, eggs and honey production as well as whole animal sales.
+
+We consider the production of meat, milk, eggs and honey as well as whole animal sales.
 
 
-#### Whole animal sales
-For the sales of whole animals, the quantities were given in number of animals. We converted the numbers into kg using the TLU conversion factors (1TLU=250kg). No quantities was consumed, the quantity harvested equals the quantity sold. 
+### Whole animal sales
+For the sales of whole animals, the quantities were given in number of animals. We converted the numbers into kg using the TLU conversion factors (1TLU=250kg). As the animal were sold alive, no quantity was consumed, the quantity harvested equals the quantity sold. 
 
 ```{r conv_tlu}
-conv_tlu*250
+conv_tlu[conv_tlu>0]*250
 ```
 
+\newpage
 ## Household information table
 The initial household information table contains information on household composition, off farm activities, and food security.
 
@@ -108,38 +110,25 @@ The initial household information table contains information on household compos
 | fies | Food Insecurity Experience Scale based on 8 questions   |       |
 | foodshortage_count | number of months with food shortage    |       |
 | foodshortage_months | name of the months with food shortage    |       |
-| currency_conversion_lcu_to_ppp | conversion from     | lcu/usd        |
+| currency_conversion | conversion from local currency to power parity purchase usd    | lcu/usd        |
 
-
-#### General information
-`hhid`is made of the prefix "LSMS_ETH_2018" and the variable `household_id`. This variable is a unique identifier for the household that can connect all the tables (crop, livestock, and livestock production).  
+### General information
+`hhid`is made of the variable `id_unique`. This variable is a unique identifier for the household that can connect all tables (crop, livestock, and livestock production).  
 
 The GPS coordinates are provided with a rounding at 0.1 decimal degree. The currency power parity purchase conversion factor is provided by the World Bank depending on the country and the year of the survey.  
 
-#### Household size
-The household composition is provided in section 1 of the household questionnaire. The male adult equivalent are calculated with 5 age-groups: 0-4, 5-10, 11-24, 25-50, 51+ and with the corresponding coefficient per gender and age class. 
-
-```{r conv_mae}
-conv_mae <- rbind("Male"=conv_M, "Female"=conv_F)
-colnames(conv_mae) <- c("0-4", "5-10", "11-24", "25-50", "51+")
-conv_mae
-```
-
-#### Off farm income
-We considered the employment (reported in section 4 of the household questionnaire) or businesses (reported in section 12). For employment, we calculated the number of hours worked, and the salary per hour based on the last payment. If the salary was higher than $1000birr/h$ we set it to $1000birr/h$. Then we multiplied the number of hours worked by the salary per hour to get the annual salary. If the annual salary resulted to be lower than the reported payment, we reported the payment as annual salary.
-
-#### Food security
-
-Last season (or average between good and bad season)
-```{r cat_hdds}
-convtime
-```
-
-The Food Insecurity Experience Scale was extracted from the 7-day recall of the FAO questions (section 8).  
-
-The months with food shortage was directly retrieve from questions in section 8.
+### Household size
+The household composition is converted by the [rhomis package](https://github.com/RHoMIS/rhomis-R-package). The male adult equivalent are calculated with 5 age-groups: 0-4, 5-10, 11-24, 25-50, 51+ and with the corresponding coefficient per gender and age class. 
 
 
+### Off farm income
+The household composition is estimated from the [rhomis package](https://github.com/RHoMIS/rhomis-R-package) based on the farm production and the estimated percentage of income from off-farm activities.
+
+### Food security
+We used the food security indicators processed by the [rhomis package](https://github.com/RHoMIS/rhomis-R-package).
+
+
+\newpage
 ## Crop and Livestock summary
 
 The household information table also contains 28 columns with summary information from crop and livestock tables. 
@@ -177,26 +166,28 @@ The household information table also contains 28 columns with summary informatio
 | farm_consumed_kcal | energy value from farm production consumed   | kcal  |
 | off_farm_perc | percentgae of income from off farm activities   | %      |
 
-All the values are calculated automatically with the function `summary_croplivestock()`. The calculations are simple and summarize per households the quantities reported in the crop and livestock tables.  
+All the values are calculated automatically with the function `calc_farm_prod()`. The calculations are simple and summarize, per household, the quantities reported in the crop and livestock tables.  
 
+For energy conversion, we used estimates mostly from the FoodData Central of the U.S.Departement of Agriculture (https://fdc.nal.usda.gov/). Below are the energy conversion factors for the twenty most important crops:
 
-For energy conversion, we used estimates mostly from the FoodData Central of the U.S.Departement of Agriculture (https://fdc.nal.usda.gov/). We could not find the energy conversion of *amboshika*, *kazmir*, *nueg*, *shiferaw*, *temporary gr* and these crop were not considered in energy calculations. Below are the energy conversion factors:
 ```{r conv_kcal}
-conv_energy[conv_energy>0 & !is.na(conv_energy)]
+top20 <- sort(tapply(hhdb_rhomis$crop$harvest_kg, hhdb_rhomis$crop$name, sum, na.rm=TRUE), decreasing = TRUE)[1:20]
+top_conv_energy <- hhdb_rhomis$conv_energy[sort(names(top20))]
+top_conv_energy[top_conv_energy>0 & !is.na(top_conv_energy)]
 ```
 
-
+\newpage
 ## GIS information
 
 Based on the GPS coordinates of households, we extracted:  
-- the administrative region and district (from GADM)  
-- the agro ecological zone (from FAO 2012)  
-- the population density    
-- the travel time to cities  
-- the Koeppen climate classification  
+
+- the Dixon farming system classification for Sub-Saharan Africa [Dixon et al. 2021](https://www.routledge.com/Farming-Systems-and-Food-Security-in-Africa-Priorities-for-Science-and-Policy-Under-Global-Change/Dixon-Garrity-Boffa-Williams-Amede-Auricht-Lott-Mburathi/p/book/9781032082141)  
+- the population density estimated by the [Gridded Population of the World (GPWv4)](https://sedac.ciesin.columbia.edu/data/collection/gpw-v4/documentation) and download from [geodata package](https://github.com/rspatial/geodata)   
+- the travel time to cities estimated by [Nelson et al. 2019](https://www.nature.com/articles/s41597-019-0265-5) and download from [geodata package](https://github.com/rspatial/geodata)   
+- the Koeppen's Climate Classification from:  
+Beck, H.E., et al. (2018) "Present and future Köppen-Geiger climate classification maps at 1-km resolution", *Nature Scientific Data*, 5, 180214 [DOI 10.1038/sdata.2018.214](https://doi.org/10.1038/sdata.2018.214)  
 
 
 ## Summary
 
-We kept only *rural* households with at least one crop or one livestock. In total, the dataset is made of `r nrow(hhinfo)` households, with information on `r nrow(crop)` crop cultivated and `r nrow(lstk)` livestock species. The dataset made of the four tables, together with tlu and energy conversion factors are binded together in the file `HHDB_LSMS_ETH2018.rda`.  
-
+We kept only *rural* households with at least one crop or one livestock. In total, the dataset is made of `r nrow(hhdb_rhomis$hhinfo)` households, with information on `r nrow(hhdb_rhomis$crop)` crop cultivated and `r nrow(hhdb_rhomis$lstk)` livestock species herd. The dataset made of the four tables, together with tlu and energy conversion factors are binded together into a `farmhousehold` object and saved into the file `HHDB_RHOMIS_27052024.rds`.

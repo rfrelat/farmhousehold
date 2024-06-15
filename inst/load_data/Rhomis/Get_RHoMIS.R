@@ -1,12 +1,17 @@
+# Transform RHoMIS dataset in farmhousehold format
+# Last update: 27/05/2024
+
+# Make sure to use the last update of the rhomis and farmhousehold package
 # devtools::install_github("l-gorman/rhomis-R-package")
 library(rhomis)
 # devtools::install_github("rfrelat/farmhousehold")
 library(farmhousehold)
 
 library(dplyr) #for fast row binding
+library(terra) # for spatial information
 source("Param_RHOMIS.R")
 
-# 1. Load dataset ----------------------
+# 1. Load data ----------------------------------
 wd <- "../Data/Rhomis_last/"
 # Load processed dataset
 tab <- read.csv(paste0(wd, "full_survey_data.csv"))
@@ -18,9 +23,9 @@ dim(ind) #54873    46
 
 tab <- cbind(tab, ind)
 tab$hhid <- tab$id_unique
-table(duplicated(tab$hhid))
+# table(duplicated(tab$hhid)) # no duplicates
 
-# 2. Create crop table----------------------------
+# 2. Create crop table --------------------------
 # get the number of columns with crop
 loopcrop <- gsub("^crop_name_", "",
                  names(tab)[grep("^crop_name_", names(tab))])
@@ -84,7 +89,6 @@ tot_area <- tab$land_cultivated_ha[match(crop$hhid, tab$hhid)]
 
 crop$land_area_ha <- tot_area*crop$prop_land_area
 
-
 # consistency among quantities
 # if yield to high, use minimum among both
 # else use maximum among both
@@ -110,8 +114,47 @@ crop$consumed_kg <- ifelse(crop$consumed_kg+crop$sold_kg>crop$harvest_kg,
 crop <- crop[order(crop$hhid, crop$name),]
 # dim(crop) #105271, 12
 
-# 3. Create livestock table----------------------------
-# A. livestock herd size
+# add the listed crops
+listcrop <- paste(tab$crops_all, tab$fruits_which, tab$vegetables_which, sep=" ")
+# remove "indigenous" or "fruits"
+listcrop <- gsub("indigenous", "", listcrop)
+listcrop <- gsub("fruits", "", listcrop)
+
+newcrop <- c()
+for (i in seq_along(listcrop)){
+  hi <- tab$hhid[i]
+  # get simplified names
+  si <- simplifynames(listcrop[[i]], names(conv_energy), warn=FALSE)
+  # remove the crop that are already reported
+  si <- si[!si%in%crop$name[crop$hhid%in%hi]]
+  if (length(si)>0){
+    ni <- data.frame(
+      "hhid"=hi,
+      "name"=si,
+      "harvest_kg"=NA,
+      "consumed_kg"=NA,
+      "sold_kg"=NA,
+      "income_lcu"=NA,
+      "prop_land_area"=NA,
+      "intercrop"=NA,
+      "use_list"=NA,     
+      "crop_residue_use"=NA,
+      "prop_harvest"=NA,
+      "land_area_ha"=NA 
+    ) 
+    newcrop <- rbind(newcrop, ni)
+  }
+}
+rmcrop <- c("n_a","na", "no_answer", "none", "no_fruit", "no_veg", "")
+newcrop <- newcrop[!newcrop$name%in%rmcrop,]
+dim(newcrop) #217036 12
+
+simplifynames(newcrop$name, names(conv_energy), warn=TRUE)
+
+crop <- rbind(crop, newcrop)
+crop <- crop[order(crop$hhid, crop$name),]
+
+# 3. Create livestock table----------------------
 looplstkcat <- gsub("^livestock_heads_", "",
                     names(tab)[grep("^livestock_heads_", names(tab))])
 # remove other categories
@@ -119,7 +162,6 @@ rm <- c("other", "other_lstk", "other2_lstk",
         "other3_lstk")
 looplstkcat <- looplstkcat[!looplstkcat%in%rm]
 
-# create a list with for each loopcrop
 tdfLC <-  lapply(looplstkcat, function(x) {
   y <- data.frame(
     "hhid"= tab$hhid,
@@ -134,7 +176,7 @@ lstkA <- lstkA[!is.na(lstkA$n),]
 lstk <- lstkA[lstkA$n>0,]
 lstk <- lstk[order(lstk$hhid, lstk$name),]
 
-# 4. Create livestock production table----------------------------
+# 4. Create livestock production table ----------
 # get the number of columns per livestock products
 looplstk <- gsub("^meat_kg_per_year_", "",
                  names(tab)[grep("^meat_kg_per_year_", names(tab))])
@@ -164,7 +206,7 @@ lstk_milk <- data.frame(
 lstk_eggs <- data.frame(
   "hhid"=rep(tab$hhid, length(looplstk)),
   "name"= unlist(tab[,paste0("livestock_name_", looplstk)]),
-  "prod"="egg",
+  "prod"="eggs",
   "harvest_kg"= NAto0(unlist(tab[,paste0("eggs_collected_kg_per_year_", looplstk)])),
   "consumed_kg"= NAto0(unlist(tab[,paste0("eggs_consumed_kg_per_year_", looplstk)])),
   "sold_kg"= NAto0(unlist(tab[,paste0("eggs_sold_kg_per_year_", looplstk)])),
@@ -203,21 +245,17 @@ lstk_honey <- lstk_honey[lstk_honey$harvest_kg>0,]
 lstk_whole <- lstk_whole[lstk_whole$harvest_kg>0,]
 lstk_prod <- rbind(lstk_meat, lstk_eggs, lstk_milk,lstk_honey, lstk_whole)
 
-# dim(lstk_prod)
-# to be added later :
-#  gender: female_adult, female_youth, livestock_who_sells, livestock_ownership
-#  manure management if information
 
 lstk_prod <- lstk_prod[order(lstk_prod$hhid, lstk_prod$name),]
 
-
-# 5. Household table -------------------------------
+# 5. Create household table ---------------------
 
 # food and diet
 listmonth <- strsplit(tab$foodshortagetime_months_which, " ")
 listmonth <- sapply(listmonth, uniqueNA)
 foodshortage_months<-sapply(listmonth, paste, collapse = " ")
 foodshortage_count<-sapply(listmonth, length)
+
 
 ifun <- function(x) {
   if (sum(is.na(x))==length(x)){
@@ -245,19 +283,23 @@ for (i in seq_along(ten_groups)){
 colnames(dietdiv_bad_season) <- names(ten_groups)
 colnames(dietdiv_last_month) <- names(ten_groups)
 
-#merge hdds: last month if available, else bad season
-dietdiv <- dietdiv_last_month
-nolast <- rowSums(dietdiv, na.rm=TRUE)==0
-dietdiv[nolast,] <- dietdiv_bad_season[nolast,]
+#merge hdds: bad season if available, else last month
+hdds_bad_season <- rowSums(dietdiv_bad_season, na.rm=TRUE)
+hdds_last_month <- rowSums(dietdiv_last_month, na.rm=TRUE)
+dietdiv <- dietdiv_bad_season
+nobad <- rowSums(dietdiv, na.rm=TRUE)==0
+dietdiv[nobad,] <- dietdiv_last_month[nobad,]
 hdds_score <- rowSums(dietdiv, na.rm=TRUE)
 hdds_score[hdds_score==0] <- NA
-
+hdds_bad_season[hdds_bad_season==0] <- NA
+hdds_last_month[hdds_last_month==0] <- NA
 
 #FIES (Food Security Experience)
 fies <- tab[,paste0("fies_", 1:8)]
 fies <- apply(fies=="y",2,as.numeric)
 colnames(fies) <- fies_lab
 # table(rowSums(fies),ind$fies_score)
+
 
 
 colH <- c("hhid", "id_form", "year", "country",
@@ -275,6 +317,8 @@ hhinfo <- data.frame(
   foodshortage_count,
   dietdiv,
   "hdds_score" = hdds_score,
+  "hdds_bad_season"=hdds_bad_season,
+  "hdds_last_month"=hdds_last_month,
   fies,
   "fies_score" = ind$fies_score,
   "off_farm_lcu"=tab$off_farm_income_lcu_per_year,
@@ -282,14 +326,7 @@ hhinfo <- data.frame(
 )
 
 
-# 5. Calculation from crop and livestock
-crop$name <- bestname(crop$name, names(conv_energy))
-lstk$name <- bestname(lstk$name, names(conv_tlu))
-lstk_prod$name <- bestname(lstk_prod$name, names(conv_tlu))
-lstk_prod$prod <- bestname(lstk_prod$prod, names(conv_energy))
-hhinfo <- calc_farm_prod(crop, lstk, lstk_prod, hhinfo, conv_tlu, conv_energy)
-
-# 6. GIS data -------------------------
+# 6. Add GIS data -------------------------------
 
 # Remove outliers
 out1 <- hhinfo$id_form=="bf_gld_2018" & hhinfo$gps_lat==13.8 &hhinfo$gps_lon==8.9
@@ -300,8 +337,6 @@ out4 <- hhinfo$id_form=="ma_crd_2019" & hhinfo$gps_lat==51.4 &hhinfo$gps_lon==-2
 hhinfo$gps_lat[out1|out2|out3|out4] <- NA
 hhinfo$gps_lon[out1|out2|out3|out4] <- NA
 
-# library(rgdal)
-library(terra)
 
 p <- vect(cbind(hhinfo$gps_lon, hhinfo$gps_lat))
 
@@ -344,12 +379,33 @@ kgp[kgp==0] <- NA
 hhinfo$koeppen <- conv_kg[kgp]
 
 
+# harmonize country name
+#table(hhinfo$country,substr(hhinfo$id_form, 1,2))
+hhinfo$country[hhinfo$country%in% "burkina"] <- "burkina_faso"
+hhinfo$country[hhinfo$country%in% "bi"] <- "burundi"
+hhinfo$country[hhinfo$country%in% "country_name"] <- "mali"
+# colSums(table(hhinfo$country,substr(hhinfo$id_form, 1,2))>0)
 
+hhinfo$large_region <- large[hhinfo$country]
+# table(hhinfo$large_region, useNA="ifany")
 
 
 # 7. Post processing ---------------------
+
+# add summary of farm production
+
+# check the name of the crop and livestock and find best matching one
+crop$name <- bestname(crop$name, names(conv_energy), warn = TRUE)
+lstk$name <- bestname(lstk$name, names(conv_tlu), warn = TRUE)
+lstk_prod$name <- bestname(lstk_prod$name, names(conv_tlu), warn = TRUE)
+lstk_prod$prod <- bestname(lstk_prod$prod, names(conv_energy), warn = TRUE)
+
+# calculate crop and livestock summary characteristics
+hhinfo <- calc_farm_prod(crop, lstk, lstk_prod, hhinfo, conv_tlu, conv_energy)
+
+# Detect and remove abnormally large values
 outliers <- hhinfo$hh_size_members>100 | hhinfo$hh_size_members==0
-table(hhinfo$id_form[outliers])
+# table(hhinfo$id_form[outliers])
 # many from vn_nt2_2019, zm_fa2_2019, ph_usm_2022
 # Replace outliers by NA
 hhinfo$hh_size_members[outliers] <- NA
@@ -360,19 +416,21 @@ outliers <- NAto0(hhinfo$land_cultivated_ha)>500
 hhinfo$land_cultivated_ha[outliers] <- NA
 
 outliers <- NAto0(hhinfo$livestock_tlu)>250
-# table(hhinfo$id_form[outliers])
+# table(hhinfo$id_form[outliers]) #tz_glv_2017 
 hhinfo$livestock_tlu[outliers] <- NA
 
 # Remove dataset with lots of NA
 colI <- c("land_cultivated_ha", "livestock_tlu", "hh_size_members")
 complete <- complete.cases(hhinfo[,colI])
-table(complete) #4017 households with incomplete information
+# table(complete) #4017 households with incomplete information
 ninc <- table(hhinfo$id_form, complete)
-print(sort(ninc[,1]/rowSums(ninc), decreasing = TRUE) [1:20])
+# print(sort(ninc[,1]/rowSums(ninc), decreasing = TRUE) [1:20])
 rm <- row.names(ninc)[ninc[,1]/rowSums(ninc)>0.5]
-
-selhh <- hhinfo$hhid%in%crop$hhid | hhinfo$hhid%in%lstk$hhid | hhinfo$hhid%in%lstk_prod$hhid
+# remove ph_usm_2022, vn_nt2_2019, and zm_fa2_2019
 rmhh <- hhinfo$id_form %in% rm
+
+#select rural household with crop or livestock
+selhh <- hhinfo$hhid%in%crop$hhid | hhinfo$hhid%in%lstk$hhid | hhinfo$hhid%in%lstk_prod$hhid
 
 # table(selhh, !rmhh)
 hhinfo <- hhinfo[selhh & !rmhh,]
@@ -380,18 +438,16 @@ crop <- crop[crop$hhid %in%hhinfo$hhid,]
 lstk <- lstk[lstk$hhid %in%hhinfo$hhid,]
 lstk_prod <- lstk_prod[lstk_prod$hhid %in%hhinfo$hhid,]
 
-# harmonize country name
-#table(hhinfo$country,substr(hhinfo$id_form, 1,2))
-hhinfo$country[hhinfo$country%in% "burkina"] <- "burkina_faso"
-hhinfo$country[hhinfo$country%in% "bi"] <- "burundi"
-hhinfo$country[hhinfo$country%in% "country_name"] <- "mali"
-# colSums(table(hhinfo$country,substr(hhinfo$id_form, 1,2))>0)
 
-hhinfo$large_region <- large[hhinfo$country]
-# table(hhinfo$large_region)
+# 8. Save dataset ---------------------
+hhdb_rhomis <- farmhousehold(
+  "crop"=crop, 
+  "lstk"=lstk, 
+  "lstk_prod"=lstk_prod, 
+  "hhinfo"=hhinfo,
+  "conv_tlu"=conv_tlu, 
+  "conv_energy"=conv_energy
+)
 
-# 3. Save dataset ---------------------
-rhomis <- list(crop, lstk, lstk_prod, hhinfo,
-               conv_tlu, conv_energy)
-save(rhomis,
-     file="../Data/Processed/HHDB_RHOMIS_09022024.rda")
+saveRDS(hhdb_rhomis,
+        file="../Data/Processed/HHDB_RHOMIS_27052024.rds", compress="xz")
