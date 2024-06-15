@@ -1,10 +1,10 @@
 Package: farmhousehold
 Type: Package
 Title: household data platform for mixed farm system analysis
-Version: 0.1.0
+Version: 1.0
 Author: Romain Frelat, James Hammond, Mark T. van Wijk
 Maintainer: Romain Frelat <rom.frelat@gmail.com>
-Description: Facilitate the analysis of farm household dataset. The package provides a database structure to optimally merge and compare different household survey. The package provide tools for mixed farming system analysis such as household data exploration, clustering and ex-ante scenario analysis.
+Description: Facilitate the analysis of farm household dataset. The package provides a database structure to optimally merge and compare different household surveys. The package provide tools for mixed farming system analysis such as household data exploration, clustering and ex-ante scenario analysis.
 Imports:
     graphics,
     plotly, 
