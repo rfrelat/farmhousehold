@@ -352,22 +352,36 @@ display: none;
 </div>
 
 
-<p><em>by Romain Frelat, James Hammond, and Mark T. van Wijk</em><br />
-<em>This dashboard is part of the <a href="https://github.com/rfrelat/farmhousehold">farmhousehold</a>
+<p><em>by Romain Frelat, Elizabeth Getahun, Leah Gichuki, Birgit
+Habermann, James Hammond, Emmaculate Kiptoo, Tigist Worku, and Mark T.
+van Wijk</em><br />
+<em>This interactive dashboard is part of the <a href="https://github.com/rfrelat/farmhousehold">farmhousehold</a>
 R-package</em></p>
-<p>The positive deviant analysis follows six successive steps:</p>
+<p>Positive deviant analysis is a method to identify multi-functionally
+well performing farm households. It is used as an example of viable
+interventions based on empirical insights and as farm modeling input
+(Modernel <em>et al.</em> 2018, Steinke <em>et al.</em> 2019, Toorop
+<em>et al.</em> 2020).<br />
+The positive deviant analysis is based on the Pareto optimality
+algorithm, which identifies non-inferior solutions in the
+multidimensional objective space.</p>
+<p>The analysis unfolds in six successive steps:</p>
 <div id="select-the-dataset" class="section level4">
 <h4><strong>1. Select the dataset</strong></h4>
-<p>You can load any csv file with households in row and variables in
-column or any <code>farmhousehold</code> data saved as rds file.</p>
-<p>Large data (N&gt;10.000) slow down the analysis. You can subset your
-data based on geographic variables.</p>
-<p>If needed for testing, you can download an example data <a href="https://github.com/rfrelat/farmhousehold/raw/main/inst/extdata/mini_rhomis.rds">here</a></p>
+<p>You can load any csv file with households in rows and variables in
+columns or any <code>farmhousehold</code> data saved as rds file.</p>
+<p>Large data (&gt;5Mb) can’t be uploaded to the online dashboard.
+Please consider using the desktop version from the
+<code>farmhousehold</code> package (<code>runPosdev()</code>). It is
+advised to upload a cleaned and simplified dataset for smooth and fast
+analysis (in the online version, you should aim for a maximum of 10.000
+households or 100 variables).</p>
+<p>If needed for testing, you can download an example data <a href="https://github.com/rfrelat/farmhousehold/raw/main/inst/extdata/mini_rhomis.rds">here</a>.</p>
 </div>
 <div id="select-variables" class="section level4">
 <h4><strong>2. Select variables</strong></h4>
 <p>By default, only numeric variables can be selected. Select which
-variables should be maximized and minimized by the pareto optimality
+variables should be maximized and minimized by the Pareto optimality
 algorithm.</p>
 </div>
 <div id="outliers" class="section level4">
@@ -382,22 +396,23 @@ higher than the <span class="math inline">\(median +3 * iqr\)</span>
 (interquartile range) or lower than <span class="math inline">\(median
 -3 * iqr\)</span>.</p></li>
 </ul>
-<p>There is no best solution to deal with outliers. Test them, visualize
-the results (see step 4) and select the combination that is best for
-your data. Another option worth considering is to exclude from the
-analysis highly skewed variables or variables with a lot of
+<p>There is no perfect solution to deal with outliers. Test them,
+visualize the results (see step 4) and select the combination that is
+best for your data. Another option worth considering is to exclude from
+the analysis highly skewed variables or variables with many
 outliers.</p>
 </div>
 <div id="explore-data" class="section level4">
 <h4><strong>4. Explore data</strong></h4>
-<p>The visualization of the data will help you select variables and deal
-with outliers. Variables should be Gaussian-like, and not too correlated
-among each other.</p>
+<p>The visualization of the data will help you select variables and
+identify outliers. Variables should be Gaussian-like, and not too
+correlated with each other.</p>
 </div>
 <div id="pareto-optimality" class="section level4">
 <h4><strong>5. Pareto optimality</strong></h4>
-<p>The pareto rank is calculated with the function eaf::pareto_rank()
-that use genetic algorithm: NSGA-II (<em>Deb et al. 2002</em>).</p>
+<p>The Pareto rank is calculated with the function
+<code>eaf::pareto_rank()</code> that uses the genetic algorithm NSGA-II
+(<em>Deb et al. 2002</em>).</p>
 <p>To select positive deviants, there are three options.</p>
 <ul>
 <li><strong>rank 1</strong>: non-dominated households (= Pareto rank 1),
@@ -407,25 +422,24 @@ as in <em>Modernel et al. 2018</em> or <em>Liang et al. 2022</em>.<br />
 all variables better than the population median, as in <em>Adelhart
 Toorop et al. 2020</em>.</li>
 <li><strong>rank 3 &amp; better</strong>: household Pareto rank higher
-or equal to 3 AND all variables better than the population median as in
+or equal to 3 AND all variables better than the population median, as in
 <em>Shija et al. 2022, World</em></li>
-<li><strong>rank 2 &amp; better 2</strong>: household Pareto rank 1 and
-2 AND almost all variables better than the population median, a
-intermediate between the two previous selection</li>
+<li><strong>rank 2 &amp; better 2</strong>: household Pareto rank 1 or 2
+AND almost all variables better than the population median.</li>
 </ul>
 </div>
-<div id="vizualisation" class="section level4">
-<h4><strong>6. Vizualisation</strong></h4>
+<div id="visualization" class="section level4">
+<h4><strong>6. Visualization</strong></h4>
 <p>The positive deviants can be visually compared on a multivariate
 space made of the two first principal components from a principal
 component analysis. The distribution of the selected variables is shown
-with boxplot.</p>
+with a boxplot.</p>
 </div>
 <div id="references" class="section level3">
 <h3>References</h3>
 <p>Kalyanmoy Deb, A Pratap, S Agarwal, T Meyarivan (2002). “A fast and
 elitist multi-objective genetic algorithm: NSGA-II.” IEEE Transactions
-on Evolutionary Computation, 6(2), 182–197. doi 10.1109/4235.996017</p>
+on Evolutionary Computation, 6(2), 182–197. doi 10.1109/4235.996017</p>
 <p>Liang, Z., van der Werf, W., Xu, Z., Cheng, J., Wang, C., Cong, W.
 F., … &amp; Groot, J. C. (2022). Identifying exemplary sustainable
 cropping systems using a positive deviance approach: Wheat-maize double

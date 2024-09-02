@@ -40,12 +40,16 @@ shinyUI(fluidPage(
           fluidRow(h4("5. Pareto optimality"),
                    column(2,
                           selectInput('met', "Criteria",
-                                      metChoices, selected="rank 1")
+                                      metChoices, selected="rank 1"),
+                          p(strong("rank"), "defines the Pareto rank of selected solutions."),
+                          p(strong("better"), "compares that solutions have better values than the population median."),
+                          p("More details in the About panel.")
+
                    ),
                    column(10, plotOutput("pdplot"))
                    ),
 
-          fluidRow(h4("6. Vizualisation"),
+          fluidRow(h4("6. Visualization"),
                    tabsetPanel(
                      id = "visu",
 

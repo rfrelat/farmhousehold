@@ -165,7 +165,7 @@ shinyServer(function(input, output, session) {
     # Calculate the difference between household and the median
     vardif <- t(t(tabS)-medvar)
     # Number of variables with 'better' than median
-    better <- rowSums(as.matrix(vardif[,maxvar]>=0)) + rowSums(as.matrix(vardif[,!maxvar]>=0))
+    better <- rowSums(as.matrix(vardif[,maxvar]>=0)) + rowSums(as.matrix(vardif[,!maxvar]<=0))
 
     if (input$met=="pr1"){
         pd <- pr==1

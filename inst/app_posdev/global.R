@@ -21,7 +21,7 @@ posdevplot <- function(df, maxvar, sel=c("pr1", "pr1bt", "pr3bt", "pr2bt2")){
   vardif <- t(t(df)-medvar)
 
   # Number of variables with 'better' than median
-  better <- rowSums(as.matrix(vardif[,maxvar]>=0)) + rowSums(as.matrix(vardif[,!maxvar]>=0))
+  better <- rowSums(as.matrix(vardif[,maxvar]>=0)) + rowSums(as.matrix(vardif[,!maxvar]<=0))
 
   #compute the cross table
   a <- table("better"=better, "Pareto"=pr)
