@@ -402,12 +402,12 @@ bar_score <- function(tab, score="HDDS", pal= NULL, marx=6, rm0=FALSE,
   }
 
   #get the column starting with "score"
-  col <- names(tab)[grep(paste0(score, "_"), names(tab), ignore.case = TRUE)]
-  #but not the score itself
-  col <- col[-grep("_score$", col, ignore.case = TRUE)]
-  # and not season nor month
-  col <- col[grep("_season$", col, ignore.case = TRUE, invert=TRUE)]
-  col <- col[grep("_month$", col, ignore.case = TRUE, invert=TRUE)]
+  col <- names(tab)[grep(paste0("^",score, "_"), names(tab), ignore.case = FALSE)]
+  #but not the score itself nor season nor month
+  rm <- c(grep("_score$", col, ignore.case = TRUE),
+          grep("_season$", col, ignore.case = TRUE),
+          grep("_month$", col, ignore.case = TRUE))
+  if (length(rm)>0){  col <- col[-rm] }
 
   if(length(col)== 0){
     stop("Can not find the columns of the score")
