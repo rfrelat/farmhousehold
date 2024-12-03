@@ -6,7 +6,7 @@ import(sf)
 import(shiny)
 
 importFrom("graphics", "axis", "barplot", "boxplot", "legend", "par",
-                "pie", "polygon", "strwidth", "text")
+                "pie", "polygon", "strwidth", "text", "abline", "mtext")
 importFrom("stats", "complete.cases", "cor", "cor.test", "density",
            "median", "quantile", "symnum")
 importFrom("utils", "data", "write.csv")

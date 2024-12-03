@@ -800,3 +800,175 @@ plot_density <- function(x, th, lab="", corskew=TRUE, pal=c("red", "blue")){
   }
 }
 
+
+#' Gender control over farm production
+#'
+#' This function show the gender control over consumed and sold farm products
+#' @param tab the dataframe with information on farm products
+#' @param interplot decide if the plot is interactive (with plotly) or not
+#' @param top select how many categories will be shown (by default 10)
+#' @keywords gender
+#' @export
+#' @examples
+#' data(hhdb_rhomis)
+#'
+#' #plot gender control on crop
+#' bar_gender(hhdb_rhomis$crop)
+#'
+#' #plot gender control on livestock product
+#' bar_gender(hhdb_rhomis$lstk_prod)
+#'
+bar_gender <- function(tab, interplot=FALSE, top=10){
+  # by default, if farmhousehold, then show gender control over crop
+  if(inherits(tab, "farmhousehold")){
+    tab <- tab$crop
+  }
+  if(any(!c("control_consumed_female", "control_income_female") %in% names(tab))){
+    stop("No information on gender control. The columns 'control_consumed_female' and 'control_income_female' are missing.")
+  }
+  if("prod"%in% names(tab)){
+    tab$name <- paste(tab$name, tab$prod, sep="_")
+  }
+
+  # select the top products among the consumed and sold ones
+  ncons <- tapply(tab$control_consumed_female>0, tab$name, sum, na.rm=TRUE)
+  nsell <- tapply(tab$control_income_female>0, tab$name, sum, na.rm=TRUE)
+  # make sure to select products that are not too unfrequent
+  if(sum(nsell>10 | ncons>10)<top){
+    top <-sum(nsell>10 | ncons>10)
+  }
+  topname <- sort(unique(c(names(nsell)[order(nsell, decreasing = TRUE)[1:top]],
+                           names(ncons)[order(ncons, decreasing = TRUE)[1:top]])))
+
+  # calculate the percentage of gender control
+  cons <- tapply(tab$control_consumed_female, tab$name, mean, na.rm=TRUE)
+  sold <- tapply(tab$control_income_female, tab$name, mean, na.rm=TRUE)
+  ncons <- tapply(!is.na(tab$control_consumed_female), tab$name, sum)
+  nsold <- tapply(!is.na(tab$control_income_female), tab$name, sum)
+
+  # organize as data.frame
+  df <- data.frame("name"=topname,
+                   "consF"=nan0(cons[topname]),
+                   "consM"=nan100(cons[topname])-100,
+                   "ncons"=ncons[topname],
+                   "sellF"=nan0(sold[topname]),
+                   "sellM"=nan100(sold[topname])-100,
+                   "nsell"=nsold[topname])
+
+  # graphical output
+  if (!interplot){
+    # base plot
+    par(mfrow=c(1,2), mar=c(4,2,3,3))
+    barplot(df$consF, horiz=TRUE, xaxt="n",
+            xlim=c(-100, 100), col="#0072B2",
+            xlab="Gender control (%)",las=1, main="Consumption")
+    barplot(df$consM, horiz=TRUE,
+            add=TRUE, col="#D55E00", xaxt="n")
+    abline(v=seq(-50,50,50), lty=2, lwd=0.5, col="grey")
+    axis(side = 1, at=seq(-100, 100, 50), labels = abs(seq(-100, 100, 50)))
+    mtext("Male", side = 1, line = 2, adj=0.22, cex = 0.7)
+    mtext("Female", side = 1, line = 2, adj=0.8, cex=0.7)
+    barplot(df$sellF, horiz=TRUE, xaxt="n",
+            xlim=c(-100, 100), col="#0072B2", xlab="Gender control (%)",las=1,
+            names.arg = topname, main="Sells")
+    barplot(df$sellM, horiz=TRUE,
+            add=TRUE, col="#D55E00", xaxt="n")
+    abline(v=seq(-100,100,50), lty=2, lwd=0.5, col="grey")
+    axis(side = 1, at=seq(-100, 100, 50), labels = abs(seq(-100, 100, 50)))
+    mtext("Male", side = 1, line = 2, adj=0.22, cex = 0.7)
+    mtext("Female", side = 1, line = 2, adj=0.8, cex=0.7)
+
+  } else {
+
+    df$legcons <- paste0("N=", df$ncons)
+    #interactive plotly alternative
+    fig1 <- plot_ly(df, x = ~consF, y=~name, type = 'bar',
+                    name = 'Female',
+                    marker = list(color ="#0072B2"),
+                    hoverinfo = 'text',
+                    hovertext = paste("Female: ", abs(round(df$consF)), "%")) %>%
+      add_trace(x = ~consM, name = 'Male',
+                marker = list(color ="#D55E00"),
+                hoverinfo = 'text',
+                hovertext = paste("Male: ", abs(round(df$consM)), "%")) %>%
+      add_trace(x = 0, name = ' ',
+                marker = list(color ="white"),
+                hoverinfo = 'text',
+                hovertext = df$legcons) %>%
+      layout(
+        title = "",
+        xaxis = list(title = "Gender control"),
+        barmode = 'relative',
+        hovermode = 'y unified')
+
+    df$legsell <- paste0("N=", df$nsell)
+    fig2 <- plot_ly(df, x = ~sellF, y=~name, type = 'bar',
+                    name = 'Female',
+                    marker = list(color ="#0072B2"),
+                    hoverinfo = 'text',
+                    hovertext = paste("Female: ", abs(round(df$sellF)), "%")) %>%
+      add_trace(x = ~sellM, name = 'Male',
+                marker = list(color ="#D55E00"),
+                hoverinfo = 'text',
+                hovertext = paste("Male: ", abs(round(df$sellM)), "%")) %>%
+      add_trace(x = 0, name = ' ',
+                marker = list(color ="white"),
+                hoverinfo = 'text',
+                hovertext = df$legsell) %>%
+      layout(
+        title = "",
+        xaxis = list(title = "Gender control"),
+        barmode = 'relative',
+        hovermode = 'y unified',
+        showlegend = FALSE
+      )
+
+    titles <-  list(
+      list(
+        x = 0.2,
+        y = 1.0,
+        text = "<b>Consumption</b>",
+        xref = "paper",
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom",
+        showarrow = FALSE
+      ),
+      list(
+        x = 0.8,
+        y = 1,
+        text = "<b>Income</b>",
+        xref = "paper",
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom",
+        showarrow = FALSE
+      ),
+      list(
+        x = 0.2,
+        y = -0.1,
+        text = "Gender control",
+        xref = "paper",
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom",
+        showarrow = FALSE
+      ),
+      list(
+        x = 0.8,
+        y = -0.1,
+        text = "Gender control",
+        xref = "paper",
+        yref = "paper",
+        xanchor = "center",
+        yanchor = "bottom",
+        showarrow = FALSE
+      ))
+    fig <- subplot(fig1, fig2, shareY = TRUE) %>%
+      layout(annotations = titles,
+             yaxis = list(title = " ")) %>%
+      config(modeBarButtons = list(list("toImage")),
+             displaylogo = FALSE)
+    return(fig)
+  }
+}

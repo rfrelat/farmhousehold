@@ -91,6 +91,15 @@ calc_farm_prod <- function(crop, lstk, lstk_prod, hhinfo,
   new$crop_yield_value_lcu_per_ha <- ifelse(new$land_cultivated_ha>0,
       (new$crop_income_lcu+new$crop_value_lcu)/new$land_cultivated_ha, NA)
 
+  # if (all(c("control_consumed_female", "control_income_female") %in% names(crop))){
+  #   fvaluecons <- tapply(crop$notsold*crop$price*crop$control_consumed_female/100, crop$hhid, sum, na.rm=TRUE)
+  #   fvaluesold <- tapply(crop$income_lcu*crop$control_income_female/100, crop$hhid, sum, na.rm=TRUE)
+  #   fvaluecrop <- (fvaluecons+fvaluesold)[mcid]
+  #   new$crop_control_female <- ifelse(new$crop_value_lcu+new$crop_income_lcu==0, NA,
+  #                                     NAto0(fvaluecrop)/(new$crop_value_lcu+new$crop_income_lcu)*100)
+  # } else {
+  #   new$crop_control_female <- NA
+  # }
 
   #calculate livestock summary
   livestock_tlu <- tapply(lstk$n*conv_tlu[lstk$name], lstk$hhid, sum, na.rm=TRUE)
@@ -144,6 +153,16 @@ calc_farm_prod <- function(crop, lstk, lstk_prod, hhinfo,
   new$lstk_yield_value_lcu_per_tlu <- ifelse(new$livestock_tlu>0,
                                             (new$lstk_income_lcu+new$lstk_value_lcu)/new$livestock_tlu, NA)
 
+  # if (all(c("control_consumed_female", "control_income_female") %in% names(lstk_prod))){
+  #   fvaluecons <- tapply(lstk_prod$notsold*lstk_prod$price*lstk_prod$control_consumed_female/100, lstk_prod$hhid, sum, na.rm=TRUE)
+  #   fvaluesold <- tapply(lstk_prod$income_lcu*lstk_prod$control_income_female/100, lstk_prod$hhid, sum, na.rm=TRUE)
+  #   fvaluelstk <- (fvaluecons+fvaluesold)[mcid]
+  #   new$lstk_control_female <- ifelse(new$lstk_value_lcu+new$lstk_income_lcu==0, NA,
+  #                                     NAto0(fvaluelstk)/(new$lstk_value_lcu+new$lstk_income_lcu)*100)
+  # } else {
+  #   new$crop_control_female <- NA
+  # }
+
   new <- as.data.frame(new)
   new$farm_div <- new$crop_div + new$lstk_div
   new$farm_harvest_kg <- new$crop_harvest_kg+new$lstk_harvest_kg
@@ -161,6 +180,14 @@ calc_farm_prod <- function(crop, lstk, lstk_prod, hhinfo,
   new$off_farm_perc <- ifelse(new$income_lcu>0, NAto0(hhinfo$off_farm_lcu) / new$income_lcu*100,0)
   new$pop_pressure_mae_per_ha <- ifelse(NAto0(new$land_cultivated_ha)>0,NAto0(hhinfo$hh_size_mae)/new$land_cultivated_ha,NA)
   new$lstk_pressure_tlu_per_ha <- ifelse(NAto0(new$land_cultivated_ha)>0,NAto0(new$livestock_tlu)/new$land_cultivated_ha,NA)
+
+  # if (all(c("control_consumed_female", "control_income_female") %in% names(crop)) &
+  #     all(c("control_consumed_female", "control_income_female") %in% names(lstk_prod))) {
+  #   tot_value <- new$crop_value_lcu+new$crop_income_lcu+new$lstk_value_lcu+new$lstk_income_lcu
+  #   new$farm_control_female <- ifelse(tot_value>0, (fvaluelstk+fvaluecrop)/tot_value*100, NA)
+  # } else {
+  #   new$farm_control_female <- NA
+  # }
 
   hhinfo <- cbind(hhinfo[,!names(hhinfo)%in%names(new)], new)
   return(hhinfo)

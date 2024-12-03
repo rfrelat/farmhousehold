@@ -85,6 +85,17 @@ shinyUI(fluidPage(
                                      value = FALSE))
            )
     ),
+    tabPanel("Gender",
+           fluidRow(
+             tabsetPanel(
+               tabPanel("Crop",
+                        withSpinner(plotlyOutput('gender_crop'), type=4)
+               ),
+               tabPanel("Livestock",
+                        withSpinner(plotlyOutput('gender_lstk'), type=4)
+               )
+             )
+    )),
     tabPanel("Segmentation",
            fluidRow(column(3,
                            selectInput("segType", h5("Segmentation:"),

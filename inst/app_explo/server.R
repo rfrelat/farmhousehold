@@ -99,6 +99,11 @@ shinyServer(function(input, output, session) {
     return(lstk[lstk$hhid%in% hhInput()$hhid,])
   })
 
+  lstkprodInput <- reactive({
+    lstkprod <- db()$lstk_prod
+    return(lstkprod[lstkprod$hhid%in% hhInput()$hhid,])
+  })
+
   output$tmapdata <- renderTmap({
     if(!is.null(input$var1) | !is.null(input$varC)){
       tmap_ind(segInput(), var=input$mapvar, interplot=TRUE)
@@ -249,8 +254,21 @@ shinyServer(function(input, output, session) {
     }
   })
 
+  # Tab 6 : GENDER --------------------------
 
-  # Tab 6 : SEGMENTATION -----------------------------
+  output$gender_crop<- renderPlotly({
+    if("control_consumed_female"%in% names(cropInput())){
+        bar_gender(cropInput(), interplot = TRUE)
+    }
+  })
+
+  output$gender_lstk<- renderPlotly({
+    if("control_consumed_female"%in% names(cropInput())){
+      bar_gender(lstkprodInput(), interplot = TRUE)
+    }
+  })
+
+  # Tab 7 : SEGMENTATION -----------------------------
   output$inseg <- renderUI({
     req(input$segType)
     output = tagList()

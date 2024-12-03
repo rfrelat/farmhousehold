@@ -124,6 +124,28 @@ NAto1 <- function(x){
   return(x)
 }
 
+#' Transform NaN to 0 (for bar_gender plot)
+#'
+#' @param x is a numeric vector
+#' @return a vector with NaN transformed into 0
+#' @export
+#
+nan0 <- function(x) {
+  x[is.nan(x)] <- 0
+  return(x)
+}
+
+#' Transform NaN to 100 (for bar_gender plot)
+#'
+#' @param x is a numeric vector
+#' @return a vector with NaN transformed into 100
+#' @export
+#
+nan100 <- function(x) {
+  x[is.nan(x)] <- 100
+  return(x)
+}
+
 #' Scale values between 0 and 1
 #'
 #' @param x is a numeric vector
